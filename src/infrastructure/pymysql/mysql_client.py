@@ -1,5 +1,5 @@
 """
-Path: src/infrastructure/pymsql/mysql_client.py
+Path: src/infrastructure/pymysql/mysql_client.py
 """
 
 import pymysql

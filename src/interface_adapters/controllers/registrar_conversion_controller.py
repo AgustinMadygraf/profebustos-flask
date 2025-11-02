@@ -6,7 +6,7 @@ from src.entities.conversion import Conversion
 from src.use_cases.registrar_conversion import RegistrarConversionUseCase
 from src.interface_adapters.gateways.mysql_conversion_gateway import MySQLConversionGateway
 from src.interface_adapters.presenters.conversion_presenter import ConversionPresenter
-from src.infrastructure.pymsql.mysql_client import MySQLClient
+from src.infrastructure.pymysql.mysql_client import MySQLClient
 
 class RegistrarConversionController:
     "Controller for handling registrar conversion requests."
