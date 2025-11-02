@@ -1,0 +1,87 @@
+"""
+Path: app.py
+"""
+
+import re
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Configurar CORS
+@app.after_request
+def after_request(response):
+    "Agregar encabezados CORS a todas las respuestas."
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    return response
+
+# Manejar preflight OPTIONS
+@app.route('/api/registrar_conversion.php', methods=['OPTIONS'])
+def handle_options():
+    "Manejar solicitudes OPTIONS para CORS."
+    return '', 200
+
+@app.route('/registrar_conversion.php', methods=['POST', 'OPTIONS'])
+def registrar_conversion():
+    "Registrar una conversión basada en los datos JSON recibidos."
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    # Validar que sea POST
+    if request.method != 'POST':
+        return jsonify({
+            'success': False,
+            'error': 'Método no permitido'
+        }), 405
+
+    # Validar Content-Type
+    if not request.is_json:
+        return jsonify({
+            'success': False,
+            'error': 'Datos incompletos o formato inválido'
+        }), 400
+
+    # Obtener datos JSON
+    data = request.get_json()
+
+    # Validar campos requeridos
+    required_fields = ['tipo', 'timestamp', 'seccion']
+    if not data or not all(field in data for field in required_fields):
+        return jsonify({
+            'success': False,
+            'error': 'Datos incompletos o formato inválido'
+        }), 400
+
+    timestamp = data['timestamp']
+    seccion = data['seccion']
+
+    # Validar formato de timestamp (ISO 8601 básico)
+    iso_pattern = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?$'
+    if not re.match(iso_pattern, timestamp):
+        return jsonify({
+            'success': False,
+            'error': 'Datos incompletos o formato inválido'
+        }), 400
+
+    # Simulación de duplicado (si timestamp termina en "0")
+    if timestamp[-1] == '0':
+        return jsonify({
+            'success': False,
+            'error': 'Conversión duplicada detectada'
+        }), 429
+
+    # Simulación de error interno (si seccion es "error")
+    if seccion == 'error':
+        return jsonify({
+            'success': False,
+            'error': 'Ocurrió un error técnico. Intenta nuevamente más tarde.'
+        }), 500
+
+    # Respuesta exitosa
+    return jsonify({
+        'success': True
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
