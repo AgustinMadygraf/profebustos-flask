@@ -108,3 +108,14 @@ def registrar_conversion():
             'success': False,
             'error': 'Datos incompletos o formato inválido'
         }), 400
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    "Manejo global de excepciones no capturadas."
+    logger.exception("Error inesperado: %s", str(e))
+    response = jsonify({
+        'success': False,
+        'error': 'Ocurrió un error técnico. Intenta nuevamente más tarde.'
+    })
+    response.status_code = 500
+    return response
