@@ -9,6 +9,9 @@ from flask_cors import CORS
 from src.shared.logger_flask_v0 import get_logger
 
 from src.interface_adapters.controllers.registrar_conversion_controller import RegistrarConversionController
+from src.interface_adapters.gateways.mysql_conversion_gateway import MySQLConversionGateway
+from src.interface_adapters.presenters.conversion_presenter import ConversionPresenter
+from src.infrastructure.pymysql.mysql_client import MySQLClient
 
 logger = get_logger("flask_app")
 
@@ -39,6 +42,12 @@ def health_check():
     "Health check endpoint."
     logger.info("Health check solicitado")
     return jsonify({'status': 'ok'}), 200
+
+# Instancia única de dependencias
+mysql_client = MySQLClient()
+gateway = MySQLConversionGateway(mysql_client)
+presenter = ConversionPresenter()
+controller = RegistrarConversionController(gateway, presenter)
 
 @app.route('/registrar_conversion.php', methods=['POST', 'OPTIONS'])
 def registrar_conversion():
@@ -98,7 +107,6 @@ def registrar_conversion():
             }), 500
 
         logger.info("Procesando conversión: %s", data)
-        controller = RegistrarConversionController()
         try:
             result = controller.handle(data)
             logger.info("Resultado de conversión: %s", result)
