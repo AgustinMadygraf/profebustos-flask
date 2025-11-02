@@ -1,0 +1,13 @@
+name: PythonAnywhere Reload
+on:
+  push:
+    branches: [ main ]
+jobs:
+  reload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reload webapp via API
+        run: |
+          curl -X POST \
+            -H "Authorization: Token ${{ secrets.PA_API_TOKEN }}" \
+            https://www.pythonanywhere.com/api/v1/user/${{ secrets.PA_USERNAME }}/websites/${{ secrets.PA_DOMAIN }}/reload/

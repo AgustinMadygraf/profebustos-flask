@@ -14,3 +14,19 @@ if project_home not in sys.path:
 
 # import flask app but need to call it "application" for WSGI to work
 from flask_app import app as application  # noqa
+
+
+
+# ------------------------------------------------------------
+
+# /var/www/<tu-app>.pythonanywhere.com_wsgi.py  (enlace desde el Web tab)
+import sys
+
+project_root = '/home/agustinmadygraf/profebustos-flask'
+flask_dir    = project_root + '/src/infrastructure/flask'
+
+for p in (flask_dir, project_root):
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+from flask_app import app as application  # Flask app global -> WSGI "application"
