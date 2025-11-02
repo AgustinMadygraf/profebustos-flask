@@ -6,8 +6,11 @@ import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from src.interface_adapters.controllers.registrar_conversion_controller import RegistrarConversionController
 from src.shared.logger_flask_v0 import get_logger
+from src.shared import config
+
+from src.infrastructure.setup import MySQLSetupChecker
+from src.interface_adapters.controllers.registrar_conversion_controller import RegistrarConversionController
 
 logger = get_logger("flask_app")
 
@@ -101,7 +104,7 @@ def registrar_conversion():
         try:
             result = controller.handle(data)
             logger.info("Resultado de conversión: %s", result)
-        except Exception as e:
+        except (ConnectionError, OSError, RuntimeError) as e:
             logger.exception("Error en RegistrarConversionController: %s", str(e))
             return jsonify({
                 'success': False,
@@ -115,6 +118,32 @@ def registrar_conversion():
             'success': False,
             'error': 'Datos incompletos o formato inválido'
         }), 400
+
+@app.route('/mysql_status', methods=['GET'])
+def mysql_status():
+    "Verifica la conexión a MySQL y muestra el host configurado."
+    checker = MySQLSetupChecker()
+    host = config.MYSQL_HOST
+    db = config.MYSQL_DB
+    status = {
+        "host": host,
+        "db": db,
+        "connected": False,
+        "database_exists": False,
+        "table_exists": False,
+        "error": None
+    }
+    try:
+        if checker.connect():
+            status["connected"] = True
+            if checker.check_database_exists():
+                status["database_exists"] = True
+                if checker.check_table_exists('conversiones'):
+                    status["table_exists"] = True
+        checker.close()
+    except (ConnectionError, OSError, RuntimeError) as e:
+        status["error"] = str(e)
+    return jsonify(status)
 
 @app.errorhandler(Exception)
 def handle_exception(e):
