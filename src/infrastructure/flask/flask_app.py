@@ -98,8 +98,15 @@ def registrar_conversion():
 
         logger.info("Procesando conversión: %s", data)
         controller = RegistrarConversionController()
-        result = controller.handle(data)
-        logger.info("Resultado de conversión: %s", result)
+        try:
+            result = controller.handle(data)
+            logger.info("Resultado de conversión: %s", result)
+        except Exception as e:
+            logger.exception("Error en RegistrarConversionController: %s", str(e))
+            return jsonify({
+                'success': False,
+                'error': f'Ocurrió un error técnico en el controlador: {str(e)}'
+            }), 500
 
         return jsonify(result)
     except (ValueError, KeyError, TypeError) as e:
@@ -115,7 +122,7 @@ def handle_exception(e):
     logger.exception("Error inesperado: %s", str(e))
     response = jsonify({
         'success': False,
-        'error': 'Ocurrió un error técnico. Intenta nuevamente más tarde.'
+        'error': f'Ocurrió un error técnico. Detalle: {str(e)}'
     })
     response.status_code = 500
     return response
