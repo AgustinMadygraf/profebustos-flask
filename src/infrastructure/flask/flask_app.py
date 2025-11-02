@@ -5,6 +5,7 @@ Path: src/infrastructure/flask/flask_app.py
 import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # Agrega esta importación
+from src.interface_adapters.controllers.registrar_conversion_controller import RegistrarConversionController
 
 app = Flask(__name__)
 CORS(app, origins=["http://profebustos.com.ar"])  # Configura CORS para el dominio permitido
@@ -14,21 +15,10 @@ def hello_world():
     "Ruta principal que devuelve un saludo."
     return 'Hola desde Flask!'
 
-@app.route('/saludo')
-def saludo():
-    "Ruta adicional que devuelve otro saludo."
-    return '¡Saludos desde otra ruta!'
-
-@app.route('/info')
-def info():
-    "Ruta que devuelve información sobre la aplicación."
-    return 'Esta es una aplicación Flask de ejemplo.'
-
-# Manejar preflight OPTIONS
-@app.route('/api/registrar_conversion.php', methods=['OPTIONS'])
-def handle_options():
-    "Manejar solicitudes OPTIONS para CORS."
-    return '', 200
+@app.route('/health', methods=['GET'])
+def health_check():
+    "Ruta de verificación de salud."
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/registrar_conversion.php', methods=['POST', 'OPTIONS'])
 def registrar_conversion():
@@ -86,7 +76,8 @@ def registrar_conversion():
             'error': 'Ocurrió un error técnico. Intenta nuevamente más tarde.'
         }), 500
 
-    # Respuesta exitosa
-    return jsonify({
-        'success': True
-    })
+    controller = RegistrarConversionController()
+    result = controller.handle(data)
+
+    # Retornar el JSON del resultado
+    return jsonify(result)
