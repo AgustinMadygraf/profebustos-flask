@@ -4,11 +4,12 @@ Path: src/infrastructure/flask/flask_app.py
 
 import re
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Agrega esta importación
+from flask_cors import CORS
+
 from src.interface_adapters.controllers.registrar_conversion_controller import RegistrarConversionController
 
 app = Flask(__name__)
-CORS(app, origins=["http://profebustos.com.ar"])  # Configura CORS para el dominio permitido
+CORS(app, origins=["http://profebustos.com.ar", "http://localhost:5173"])
 
 @app.route('/')
 def hello_world():
