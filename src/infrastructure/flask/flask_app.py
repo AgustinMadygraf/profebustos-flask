@@ -7,46 +7,51 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from src.interface_adapters.controllers.registrar_conversion_controller import RegistrarConversionController
+from src.shared.logger_flask_v0 import get_logger
+
+logger = get_logger("flask_app")
 
 app = Flask(__name__)
 CORS(app, origins=["http://profebustos.com.ar", "http://localhost:5173"])
 
 @app.route('/')
 def hello_world():
-    "Ruta principal que devuelve un saludo."
+    "Ruta principal de la aplicación."
+    logger.info("Ruta principal accedida")
     return 'Hola desde Flask!'
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    "Ruta de verificación de salud."
+    "Health check endpoint."
+    logger.info("Health check solicitado")
     return jsonify({'status': 'ok'}), 200
 
 @app.route('/registrar_conversion.php', methods=['POST', 'OPTIONS'])
 def registrar_conversion():
-    "Registrar una conversión basada en los datos JSON recibidos."
+    "Endpoint para registrar conversiones."
+    logger.info("Solicitud a /registrar_conversion.php")
     if request.method == 'OPTIONS':
+        logger.info("Preflight OPTIONS recibido")
         return '', 200
 
-    # Validar que sea POST
     if request.method != 'POST':
+        logger.warning("Método no permitido: %s", request.method)
         return jsonify({
             'success': False,
             'error': 'Método no permitido'
         }), 405
 
-    # Validar Content-Type
     if not request.is_json:
+        logger.warning("Content-Type inválido")
         return jsonify({
             'success': False,
             'error': 'Datos incompletos o formato inválido'
         }), 400
 
-    # Obtener datos JSON
     data = request.get_json()
-
-    # Validar campos requeridos
     required_fields = ['tipo', 'timestamp', 'seccion']
     if not data or not all(field in data for field in required_fields):
+        logger.warning("Campos requeridos faltantes")
         return jsonify({
             'success': False,
             'error': 'Datos incompletos o formato inválido'
@@ -55,30 +60,31 @@ def registrar_conversion():
     timestamp = data['timestamp']
     seccion = data['seccion']
 
-    # Validar formato de timestamp (ISO 8601 básico)
     iso_pattern = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?$'
     if not re.match(iso_pattern, timestamp):
+        logger.warning("Formato de timestamp inválido: %s", timestamp)
         return jsonify({
             'success': False,
             'error': 'Datos incompletos o formato inválido'
         }), 400
 
-    # Simulación de duplicado (si timestamp termina en "0")
     if timestamp[-1] == '0':
+        logger.info("Conversión duplicada detectada")
         return jsonify({
             'success': False,
             'error': 'Conversión duplicada detectada'
         }), 429
 
-    # Simulación de error interno (si seccion es "error")
     if seccion == 'error':
+        logger.error("Error técnico simulado")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error técnico. Intenta nuevamente más tarde.'
         }), 500
 
+    logger.info("Procesando conversión: %s", data)
     controller = RegistrarConversionController()
     result = controller.handle(data)
+    logger.info("Resultado de conversión: %s", result)
 
-    # Retornar el JSON del resultado
     return jsonify(result)
