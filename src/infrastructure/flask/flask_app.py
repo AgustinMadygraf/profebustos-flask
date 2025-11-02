@@ -12,7 +12,15 @@ from src.shared.logger_flask_v0 import get_logger
 logger = get_logger("flask_app")
 
 app = Flask(__name__)
-CORS(app, origins=["http://profebustos.com.ar", "http://localhost:5173"])
+CORS(app, origins=["http://profebustos.com.ar"], supports_credentials=True)
+
+@app.after_request
+def add_cors_headers(response):
+    " Agrega los encabezados CORS necesarios a la respuesta."
+    response.headers["Access-Control-Allow-Origin"] = "http://profebustos.com.ar"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
 
 @app.route('/')
 def hello_world():
