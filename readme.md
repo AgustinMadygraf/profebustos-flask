@@ -4,25 +4,34 @@ Aplicación Flask para registrar conversiones de usuarios (por ejemplo, clics en
 
 ## Instalación
 
-1. Clona el repositorio.
-2. Crea y activa un entorno virtual:
+Consulta la guía completa en [docs/installing.md](docs/installing.md).
+
+### Ejecución rápida local
+
+1. Clona el repositorio:
    ```sh
    git clone https://github.com/AgustinMadygraf/profebustos-flask
    cd profebustos-flask
+   ```
+2. Crea y activa un entorno virtual:
+   ```sh
    python -m venv venv
-   # En Windows:
-   venv\Scripts\activate
-   # En Linux/macOS:
-   source venv/bin/activate
+   venv\Scripts\activate  # En Windows
+   # source venv/bin/activate  # En Linux/macOS
    ```
 3. Instala las dependencias:
    ```sh
-  python.exe -m pip install -U pip setuptools wheel
+   python.exe -m pip install -U pip setuptools wheel
    pip install -r requirements.txt
    ```
-4. Ejecuta la aplicación:
+4. Configura las variables de entorno en `.env` (ver ejemplo en `docs/installing.md`).
+5. Inicializa la base de datos:
    ```sh
-   python app.py
+   python setup_db.py
+   ```
+6. Ejecuta la aplicación:
+   ```sh
+   python run.py
    ```
 
 ## Endpoints
