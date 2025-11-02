@@ -38,3 +38,16 @@ class MySQLClient:
         except Exception as e:
             logger.error("Error al insertar conversión: %s", e)
             raise
+
+    def get_all_conversions(self):
+        "Obtiene todos los registros de la tabla conversiones."
+        try:
+            with self.connection.cursor() as cursor:
+                sql = "SELECT * FROM conversiones"
+                cursor.execute(sql)
+                results = cursor.fetchall()
+                logger.info("Registros obtenidos correctamente")
+                return results
+        except Exception as e:
+            logger.error("Error al obtener conversiones: %s", e)
+            raise

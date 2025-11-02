@@ -49,6 +49,21 @@ gateway = MySQLConversionGateway(mysql_client)
 presenter = ConversionPresenter()
 controller = RegistrarConversionController(gateway, presenter)
 
+# Nueva ruta para ver todas las conversiones
+@app.route('/conversiones', methods=['GET'])
+def ver_conversiones():
+    "Devuelve todos los registros de la tabla conversiones como JSON."
+    logger.info("Solicitud a /conversiones")
+    try:
+        registros = gateway.get_all()
+        return jsonify(registros), 200
+    except (ConnectionError, OSError, RuntimeError) as e:
+        logger.exception("Error al obtener conversiones: %s", str(e))
+        return jsonify({
+            'success': False,
+            'error': f'Ocurrió un error técnico. Detalle: {str(e)}'
+        }), 500
+
 @app.route('/registrar_conversion.php', methods=['POST', 'OPTIONS'])
 def registrar_conversion():
     "Endpoint para registrar conversiones."
@@ -124,6 +139,15 @@ def registrar_conversion():
             'success': False,
             'error': 'Datos incompletos o formato inválido'
         }), 400
+
+@app.errorhandler(404)
+def not_found_error(e):
+    "Manejo de errores 404."
+    logger.warning("Recurso no encontrado: %s", str(e))
+    return jsonify({
+        'success': False,
+        'error': 'Recurso no encontrado (404)'
+    }), 404
 
 @app.errorhandler(Exception)
 def handle_exception(e):

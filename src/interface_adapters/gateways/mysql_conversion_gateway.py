@@ -15,3 +15,7 @@ class MySQLConversionGateway(ConversionGateway):
             conversion.timestamp,
             conversion.seccion
         )
+
+    def get_all(self):
+        "Obtiene todos los registros de conversiones."
+        return self.mysql_client.get_all_conversions()
