@@ -1,11 +1,13 @@
 """
-Path: src/infrastructure/flask_app.py
+Path: src/infrastructure/flask/flask_app.py
 """
 
 import re
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Agrega esta importación
 
 app = Flask(__name__)
+CORS(app, origins=["http://profebustos.com.ar"])  # Configura CORS para el dominio permitido
 
 @app.route('/')
 def hello_world():
@@ -21,15 +23,6 @@ def saludo():
 def info():
     "Ruta que devuelve información sobre la aplicación."
     return 'Esta es una aplicación Flask de ejemplo.'
-
-# Configurar CORS
-@app.after_request
-def after_request(response):
-    "Agregar encabezados CORS a todas las respuestas."
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-    response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    return response
 
 # Manejar preflight OPTIONS
 @app.route('/api/registrar_conversion.php', methods=['OPTIONS'])
