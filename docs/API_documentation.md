@@ -1,4 +1,3 @@
-
 # API Documentation
 
 ## Endpoint: Registrar Conversión
@@ -24,7 +23,7 @@ POST https://<subdominio>.ngrok-free.app/api/registrar_conversion.php
 ```json
 {
   "tipo": "whatsapp",           // string. Valores posibles: "whatsapp" (puede ampliarse en el futuro)
-  "timestamp": "YYYY-MM-DDTHH:mm:ss.sssZ", // string. Formato ISO 8601 (ejemplo: 2025-11-02T15:04:05.123Z)
+  "timestamp": "YYYY-MM-DDTHH:mm:ss.sssZ", // string. Formato ISO 8601 en UTC (ejemplo: 2025-11-02T15:04:05.123Z)
   "seccion": "fab"              // string. Valores posibles: "fab" (puede ampliarse en el futuro)
 }
 ```
@@ -110,7 +109,7 @@ fetch('https://<subdominio>.ngrok-free.app/api/registrar_conversion.php', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     tipo: 'whatsapp',
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString(), // Siempre en UTC
     seccion: 'fab'
   })
 })
@@ -146,5 +145,21 @@ fetch('https://<subdominio>.ngrok-free.app/api/registrar_conversion.php', {
 - El endpoint valida la existencia de la tabla y devuelve un error específico si no existe.
 - Los mensajes de error pueden ser usados para mostrar alertas al usuario en el frontend.
 - Se recomienda versionar el endpoint en el futuro (`/api/v1/registrar_conversion.php`).
-- El campo `timestamp` debe estar en formato ISO 8601.
+- El campo `timestamp` debe estar en formato ISO 8601 **en UTC**. Si necesitas mostrar la hora local en el frontend, convierte el valor recibido desde UTC a tu zona horaria.
+
+#### Ejemplo para mostrar la hora local en el frontend
+
+Si recibes un timestamp en UTC y quieres mostrarlo en la hora local de Buenos Aires (UTC-3), puedes hacerlo así:
+
+```typescript
+function mostrarHoraLocal(utcString: string): string {
+  const fecha = new Date(utcString);
+  return fecha.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+}
+
+// Ejemplo de uso:
+const horaLocal = mostrarHoraLocal('2025-11-03T00:12:04.254Z');
+// horaLocal será "2/11/2025 21:12:04"
+```
+
 - Considerar agregar autenticación y protección contra abuso/rate limiting si el endpoint se expone públicamente.

@@ -24,6 +24,21 @@
     <div id="error-message" class="alert alert-danger d-none"></div>
 </div>
 <script>
+    // Convierte UTC a hora local de Buenos Aires y lo muestra como "día/mes/año hh:mm:ss am/pm"
+    function mostrarHoraLocal(utcString) {
+        const fecha = new Date(utcString);
+        return fecha.toLocaleString('es-AR', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+    }
+
     fetch('/conversiones')
         .then(response => response.json())
         .then(data => {
@@ -34,7 +49,7 @@
                     tr.innerHTML = `
                         <td>${row.id}</td>
                         <td>${row.tipo}</td>
-                        <td>${row.timestamp}</td>
+                        <td>${mostrarHoraLocal(row.timestamp)}</td>
                         <td>${row.seccion}</td>
                     `;
                     tbody.appendChild(tr);
