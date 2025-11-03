@@ -72,7 +72,30 @@ class MySQLClient:
             logger.error("Error al obtener conversiones: %s", e)
             raise
 
+    def get_all_etiquetas(self):
+        "Obtiene todas las etiquetas de la tabla etiquetas."
+        self.ensure_connection()
+        try:
+            with self.connection.cursor() as cursor:
+                sql = "SELECT * FROM etiquetas"
+                cursor.execute(sql)
+                results = cursor.fetchall()
+                logger.info("Etiquetas obtenidas correctamente")
+                return results
+        except Exception as e:
+            logger.error("Error al obtener etiquetas: %s", e)
+            raise
+
     def get_connection(self):
         "Devuelve la conexión actual a MySQL, asegurando que esté activa."
         self.ensure_connection()
         return self.connection
+
+    def insert_etiqueta(self, nombre, descripcion):
+        "Inserta una nueva etiqueta y devuelve el id."
+        self.ensure_connection()
+        with self.connection.cursor() as cursor:
+            sql = "INSERT INTO etiquetas (nombre, descripcion) VALUES (%s, %s)"
+            cursor.execute(sql, (nombre, descripcion))
+            self.connection.commit()
+            return cursor.lastrowid

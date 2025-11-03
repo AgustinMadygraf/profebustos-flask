@@ -147,6 +147,43 @@ def tabla_index():
     ruta_real = os.path.join(app.static_folder, 'tabla')
     return send_from_directory(ruta_real, 'index.html')
 
+
+# Etiquetas: GET y POST
+@app.route('/etiquetas', methods=['GET'])
+def obtener_etiquetas():
+    "Devuelve una lista dinámica de etiquetas desde la base de datos."
+    try:
+        etiquetas = mysql_client.get_all_etiquetas()
+        return jsonify(etiquetas), 200
+    except (ConnectionError, OSError, RuntimeError) as e:
+        logger.error("Error al obtener etiquetas: %s", str(e))
+        return jsonify({
+            'success': False,
+            'error': f'Ocurrió un error técnico al obtener etiquetas: {str(e)}'
+        }), 500
+
+@app.route('/etiquetas', methods=['POST'])
+def crear_etiqueta():
+    "Crea una nueva etiqueta en la base de datos."
+    if not request.is_json:
+        logger.debug("Formato JSON requerido en POST /etiquetas")
+        return jsonify({'success': False, 'error': 'Formato JSON requerido'}), 400
+    data = request.get_json()
+    nombre = data.get('nombre', '').strip()
+    descripcion = data.get('descripcion', '').strip()
+    logger.debug("Datos recibidos: nombre=%s, descripcion=%s", nombre, descripcion)
+    if not nombre:
+        logger.debug("Nombre de etiqueta vacío en POST /etiquetas")
+        return jsonify({'success': False, 'error': 'El nombre es requerido'}), 400
+    try:
+        # Guardar en la base de datos
+        nueva_id = mysql_client.insert_etiqueta(nombre, descripcion)
+        logger.info("Etiqueta creada: id=%s, nombre=%s, descripcion=%s", nueva_id, nombre, descripcion)
+        return jsonify({'success': True, 'id': nueva_id, 'nombre': nombre, 'descripcion': descripcion}), 201
+    except (ConnectionError, OSError, RuntimeError, ValueError) as e:
+        logger.error("Error al crear etiqueta: %s", str(e))
+        return jsonify({'success': False, 'error': f'No se pudo crear la etiqueta: {str(e)}'}), 500
+
 @app.errorhandler(404)
 def not_found_error(e):
     "Manejo de errores 404."
