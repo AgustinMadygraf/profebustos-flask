@@ -184,6 +184,39 @@ def crear_etiqueta():
         logger.error("Error al crear etiqueta: %s", str(e))
         return jsonify({'success': False, 'error': f'No se pudo crear la etiqueta: {str(e)}'}), 500
 
+@app.route('/conversiones/<int:conversion_id>/etiqueta', methods=['POST'])
+def asignar_etiqueta_a_conversion(conversion_id):
+    """
+    Asigna una etiqueta existente a una conversión solo si no tiene etiqueta.
+    Espera JSON: { "etiqueta_id": <int> }
+    """
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Formato JSON requerido'}), 400
+    data = request.get_json()
+    etiqueta_id = data.get('etiqueta_id')
+    if not etiqueta_id:
+        return jsonify({'success': False, 'error': 'etiqueta_id requerido'}), 400
+
+    try:
+        # Verifica conversión
+        conversion = mysql_client.get_conversion_by_id(conversion_id)
+        if not conversion:
+            return jsonify({'success': False, 'error': 'Conversión no encontrada'}), 404
+        if conversion.get('etiqueta_id'):
+            return jsonify({'success': False, 'error': 'La conversión ya tiene etiqueta'}), 409
+
+        # Verifica etiqueta
+        etiqueta = mysql_client.get_etiqueta_by_id(etiqueta_id)
+        if not etiqueta:
+            return jsonify({'success': False, 'error': 'Etiqueta no encontrada'}), 404
+
+        # Actualiza conversión
+        mysql_client.update_conversion_etiqueta(conversion_id, etiqueta_id)
+        return jsonify({'success': True}), 200
+    except (ConnectionError, OSError, RuntimeError, ValueError) as e:
+        logger.error("Error al asignar etiqueta: %s", str(e))
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.errorhandler(404)
 def not_found_error(e):
     "Manejo de errores 404."

@@ -26,17 +26,10 @@ class TableComponent {
         throw new Error('Método renderRow debe ser implementado por la subclase');
     }
 
-    render(data) {
-        this.hideError();
-        this.clearTable();
-
-        if (!Array.isArray(data)) {
-            this.showError(data.error || 'Error al cargar datos');
-            return;
-        }
-
-        data.forEach(item => {
-            const row = this.renderRow(item);
+    render(conversiones, etiquetas = []) {
+        this.tableElement.innerHTML = '';
+        conversiones.forEach(conversion => {
+            const row = this.renderRow(conversion, etiquetas);
             this.tableElement.appendChild(row);
         });
     }

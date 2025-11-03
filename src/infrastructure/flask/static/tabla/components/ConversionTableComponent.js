@@ -10,11 +10,18 @@ class ConversionTableComponent extends TableComponent {
         super(tableId, errorElementId);
     }
 
-    renderRow(conversionData) {
+    renderRow(conversionData, etiquetas = []) {
         const tr = document.createElement('tr');
-        const etiquetaDisplay = conversionData.etiqueta
-            ? `${conversionData.etiqueta.nombre} (${conversionData.etiqueta.descripcion || ''})`
-            : '';
+        let etiquetaCell = '';
+        if (conversionData.etiqueta) {
+            etiquetaCell = `${conversionData.etiqueta.nombre} (${conversionData.etiqueta.descripcion || ''})`;
+        } else {
+            // Selector de etiquetas si está vacío
+            etiquetaCell = `<select class="form-select form-select-sm etiqueta-selector" data-conversion-id="${conversionData.id}">
+                <option value="">Etiquetar...</option>
+                ${etiquetas.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('')}
+            </select>`;
+        }
 
         tr.innerHTML = `
             <td>${conversionData.id}</td>
@@ -22,7 +29,7 @@ class ConversionTableComponent extends TableComponent {
             <td>${DateFormatter.toBuenosAiresDateTime(conversionData.timestamp)}</td>
             <td>${conversionData.seccion}</td>
             <td>${conversionData.web || ''}</td>
-            <td>${etiquetaDisplay}</td>
+            <td>${etiquetaCell}</td>
         `;
         return tr;
     }

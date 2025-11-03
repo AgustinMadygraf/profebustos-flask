@@ -99,3 +99,25 @@ class MySQLClient:
             cursor.execute(sql, (nombre, descripcion))
             self.connection.commit()
             return cursor.lastrowid
+
+    def get_conversion_by_id(self, conversion_id):
+        "Obtiene una conversión por su ID."
+        self.ensure_connection()
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM conversiones WHERE id=%s", (conversion_id,))
+            return cursor.fetchone()
+
+    def get_etiqueta_by_id(self, etiqueta_id):
+        "Obtiene una etiqueta por su ID."
+        self.ensure_connection()
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM etiquetas WHERE id=%s", (etiqueta_id,))
+            return cursor.fetchone()
+
+    def update_conversion_etiqueta(self, conversion_id, etiqueta_id):
+        "Actualiza la etiqueta de una conversión."
+        self.ensure_connection()
+        with self.connection.cursor() as cursor:
+            cursor.execute("UPDATE conversiones SET etiqueta_id=%s WHERE id=%s", (etiqueta_id, conversion_id))
+            self.connection.commit()
+            logger.info("Etiqueta de conversión actualizada correctamente")
