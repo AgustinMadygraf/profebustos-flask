@@ -21,9 +21,8 @@ class App {
     }
 
     async init() {
-        console.log('App.init()');
-        await this.loadConversiones();
         await this.loadEtiquetas();
+        await this.loadConversiones();
         this.setupEventListeners();
     }
 
@@ -31,8 +30,7 @@ class App {
         console.info('Cargando conversiones...');
         try {
             const conversiones = await this.conversionService.getConversiones();
-            console.log('Conversiones cargadas:', conversiones);
-            this.conversiones = conversiones; // Guarda para uso posterior
+            this.conversiones = conversiones;
             this.conversionTable.render(conversiones, this.etiquetas || []);
             this.setupEtiquetaSelectorListener();
         } catch (error) {
@@ -45,8 +43,7 @@ class App {
         console.info('Cargando etiquetas...');
         try {
             const etiquetas = await this.etiquetaService.getEtiquetas();
-            console.log('Etiquetas cargadas:', etiquetas);
-            this.etiquetas = etiquetas; // Guarda para uso posterior
+            this.etiquetas = etiquetas;
             this.etiquetaTable.render(etiquetas);
         } catch (error) {
             console.error('Error al cargar etiquetas:', error);
@@ -67,7 +64,6 @@ class App {
                 }
                 try {
                     await this.conversionService.asignarEtiqueta(conversionId, etiquetaId);
-                    console.log(`Etiqueta asignada correctamente a conversión ${conversionId}`);
                     await this.loadConversiones();
                 } catch (error) {
                     console.error('Error de red al asignar etiqueta:', error);
@@ -84,7 +80,6 @@ class App {
             try {
                 const result = await this.etiquetaService.createEtiqueta(etiquetaData);
                 if (result.success) {
-                    console.log('Etiqueta creada exitosamente:', result);
                     this.etiquetaModal.close();
                     await this.loadEtiquetas();
                 } else {
@@ -101,6 +96,5 @@ class App {
 
 // Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM completamente cargado, inicializando App...');
     new App();
 });

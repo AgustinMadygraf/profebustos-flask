@@ -17,10 +17,7 @@ class ConversionTableComponent extends TableComponent {
             etiquetaCell = `${conversionData.etiqueta.nombre} (${conversionData.etiqueta.descripcion || ''})`;
         } else {
             // Selector de etiquetas si está vacío
-            etiquetaCell = `<select class="form-select form-select-sm etiqueta-selector" data-conversion-id="${conversionData.id}">
-                <option value="">Etiquetar...</option>
-                ${etiquetas.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('')}
-            </select>`;
+            etiquetaCell = `<select class=\"form-select form-select-sm etiqueta-selector\" data-conversion-id=\"${conversionData.id}\">\n                <option value=\"\">Etiquetar...</option>\n                ${etiquetas.map(e => `<option value=\"${e.id}\">${e.nombre}</option>`).join('')}\n            </select>`;
         }
 
         tr.innerHTML = `

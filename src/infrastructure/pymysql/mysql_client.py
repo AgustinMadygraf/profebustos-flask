@@ -59,15 +59,36 @@ class MySQLClient:
             raise
 
     def get_all_conversions(self):
-        "Obtiene todos los registros de la tabla conversiones."
+        "Obtiene todos los registros de la tabla conversiones, incluyendo el objeto etiqueta si corresponde."
         self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:
-                sql = "SELECT * FROM conversiones"
+                sql = '''
+                    SELECT c.*, e.id as etiqueta_id, e.nombre as etiqueta_nombre, e.descripcion as etiqueta_descripcion
+                    FROM conversiones c
+                    LEFT JOIN etiquetas e ON c.etiqueta_id = e.id
+                    ORDER BY c.id ASC
+                '''
                 cursor.execute(sql)
                 results = cursor.fetchall()
                 logger.info("Registros obtenidos correctamente")
-                return results
+                # Armar lista de conversiones con objeto etiqueta si corresponde
+                conversiones = []
+                for row in results:
+                    conv = dict(row)
+                    etiqueta = None
+                    if conv.get('etiqueta_id'):
+                        etiqueta = {
+                            'id': conv['etiqueta_id'],
+                            'nombre': conv['etiqueta_nombre'],
+                            'descripcion': conv['etiqueta_descripcion']
+                        }
+                    conv['etiqueta'] = etiqueta
+                    # Eliminar campos duplicados del join
+                    conv.pop('etiqueta_nombre', None)
+                    conv.pop('etiqueta_descripcion', None)
+                    conversiones.append(conv)
+                return conversiones
         except Exception as e:
             logger.error("Error al obtener conversiones: %s", e)
             raise
@@ -77,7 +98,7 @@ class MySQLClient:
         self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:
-                sql = "SELECT * FROM etiquetas"
+                sql = "SELECT * FROM etiquetas ORDER BY id ASC"
                 cursor.execute(sql)
                 results = cursor.fetchall()
                 logger.info("Etiquetas obtenidas correctamente")
@@ -116,8 +137,15 @@ class MySQLClient:
 
     def update_conversion_etiqueta(self, conversion_id, etiqueta_id):
         "Actualiza la etiqueta de una conversión."
+        logger.info("Intentando actualizar etiqueta: conversion_id=%s, etiqueta_id=%s", conversion_id, etiqueta_id)
         self.ensure_connection()
-        with self.connection.cursor() as cursor:
-            cursor.execute("UPDATE conversiones SET etiqueta_id=%s WHERE id=%s", (etiqueta_id, conversion_id))
-            self.connection.commit()
-            logger.info("Etiqueta de conversión actualizada correctamente")
+        logger.info("Conexión activa: %s", self.connection.open if self.connection else 'No existe')
+        try:
+            with self.connection.cursor() as cursor:
+                logger.info("Cursor abierto para UPDATE")
+                cursor.execute("UPDATE conversiones SET etiqueta_id=%s WHERE id=%s", (etiqueta_id, conversion_id))
+                self.connection.commit()
+                logger.info("Etiqueta de conversión actualizada correctamente")
+        except Exception as e:
+            logger.error("Error en update_conversion_etiqueta: %s", e)
+            raise
