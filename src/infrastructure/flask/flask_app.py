@@ -3,7 +3,8 @@ Path: src/infrastructure/flask/flask_app.py
 """
 
 import re
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 from src.shared.logger_flask_v0 import get_logger
@@ -139,6 +140,12 @@ def registrar_conversion():
             'success': False,
             'error': 'Datos incompletos o formato inválido'
         }), 400
+
+@app.route('/tabla')
+def tabla_index():
+    "Ruta para servir el archivo index.html de la tabla."
+    ruta_real = os.path.join(app.static_folder, 'tabla')
+    return send_from_directory(ruta_real, 'index.html')
 
 @app.errorhandler(404)
 def not_found_error(e):
