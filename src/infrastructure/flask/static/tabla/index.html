@@ -15,6 +15,7 @@
                 <th>Tipo</th>
                 <th>Timestamp</th>
                 <th>Sección</th>
+                <th>Web</th>
             </tr>
         </thead>
         <tbody>
@@ -51,6 +52,7 @@
                         <td>${row.tipo}</td>
                         <td>${mostrarHoraLocal(row.timestamp)}</td>
                         <td>${row.seccion}</td>
+                        <td>${row.web || ''}</td>
                     `;
                     tbody.appendChild(tr);
                 });

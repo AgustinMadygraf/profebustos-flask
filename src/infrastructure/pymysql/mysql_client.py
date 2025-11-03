@@ -24,15 +24,15 @@ class MySQLClient:
             logger.error("Error de conexión a MySQL: %s", e)
             raise
 
-    def insert_conversion(self, tipo, timestamp, seccion):
-        "Inserta un registro de conversión en la base de datos."
+    def insert_conversion(self, tipo, timestamp, seccion, web):
+        "Inserta un registro de conversión en la base de datos, incluyendo el campo web."
         try:
             with self.connection.cursor() as cursor:
                 sql = """
-                    INSERT INTO conversiones (tipo, timestamp, seccion)
-                    VALUES (%s, %s, %s)
+                    INSERT INTO conversiones (tipo, timestamp, seccion, web)
+                    VALUES (%s, %s, %s, %s)
                 """
-                cursor.execute(sql, (tipo, timestamp, seccion))
+                cursor.execute(sql, (tipo, timestamp, seccion, web))
                 self.connection.commit()
                 logger.info("Conversión insertada correctamente")
         except Exception as e:

@@ -14,7 +14,8 @@ class MySQLConversionGateway(ConversionGateway):
         self.mysql_client.insert_conversion(
             conversion.tipo,
             conversion.timestamp,
-            conversion.seccion
+            conversion.seccion,
+            conversion.web
         )
 
     def get_all(self):
