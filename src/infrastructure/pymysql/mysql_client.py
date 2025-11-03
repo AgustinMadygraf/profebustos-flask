@@ -11,12 +11,23 @@ logger = get_logger()
 class MySQLClient:
     "Cliente MySQL para operaciones de base de datos."
     def __init__(self, host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD, db=MYSQL_DB):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db = db
+        self.connection = None
+        self.connect()
+
+    def connect(self):
+        "Establece una nueva conexión a MySQL."
         try:
+            if self.connection:
+                self.connection.close()
             self.connection = pymysql.connect(
-                host=host,
-                user=user,
-                password=password,
-                database=db,
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.db,
                 cursorclass=pymysql.cursors.DictCursor
             )
             logger.info("Conexión a MySQL exitosa")
@@ -24,8 +35,16 @@ class MySQLClient:
             logger.error("Error de conexión a MySQL: %s", e)
             raise
 
+    def ensure_connection(self):
+        "Verifica si la conexión está abierta y la restablece si es necesario."
+        try:
+            self.connection.ping(reconnect=True)
+        except (pymysql.Error, AttributeError):
+            self.connect()
+
     def insert_conversion(self, tipo, timestamp, seccion, web):
         "Inserta un registro de conversión en la base de datos, incluyendo el campo web."
+        self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:
                 sql = """
@@ -41,6 +60,7 @@ class MySQLClient:
 
     def get_all_conversions(self):
         "Obtiene todos los registros de la tabla conversiones."
+        self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:
                 sql = "SELECT * FROM conversiones"
