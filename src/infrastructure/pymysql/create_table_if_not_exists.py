@@ -45,7 +45,59 @@ class TableCreator:
                         );
                     """)
                     self.logger.info("La tabla 'conversiones' fue creada correctamente.")
+                # Agregar columna 'puntaje_lead' si no existe
+                cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'puntaje_lead';")
+                puntaje_lead_column = cursor.fetchone()
+                if not puntaje_lead_column:
+                    cursor.execute("""
+                        ALTER TABLE conversiones
+                        ADD COLUMN puntaje_lead TINYINT UNSIGNED DEFAULT NULL;
+                    """)
+                    self.logger.info("El campo 'puntaje_lead' fue agregado a la tabla 'conversiones'.")
+                else:
+                    self.logger.info("El campo 'puntaje_lead' ya existe en la tabla 'conversiones'.")
             connection.close()
         except Exception as e:
             self.logger.error("Error al crear la tabla: %s", e)
+            raise
+
+    def create_etiquetas_table(self):
+        "Crea la tabla 'etiquetas' si no existe."
+        try:
+            connection = pymysql.connect(
+                host=MYSQL_HOST,
+                user=MYSQL_USER,
+                password=MYSQL_PASSWORD,
+                database=MYSQL_DB,
+                cursorclass=pymysql.cursors.DictCursor
+            )
+            with connection.cursor() as cursor:
+                cursor.execute("SHOW TABLES LIKE %s", ("etiquetas",))
+                result = cursor.fetchone()
+                if not result:
+                    cursor.execute("""
+                        CREATE TABLE etiquetas (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            nombre VARCHAR(50) UNIQUE NOT NULL,
+                            descripcion VARCHAR(255) NULL
+                        );
+                    """)
+                    self.logger.info("La tabla 'etiquetas' fue creada correctamente.")
+                else:
+                    self.logger.info("La tabla 'etiquetas' ya existía.")
+                # Agregar columna 'etiqueta_id' a conversiones si no existe
+                cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'etiqueta_id';")
+                etiqueta_id_column = cursor.fetchone()
+                if not etiqueta_id_column:
+                    cursor.execute("""
+                        ALTER TABLE conversiones
+                        ADD COLUMN etiqueta_id INT NULL,
+                        ADD FOREIGN KEY (etiqueta_id) REFERENCES etiquetas(id);
+                    """)
+                    self.logger.info("El campo 'etiqueta_id' fue agregado a la tabla 'conversiones'.")
+                else:
+                    self.logger.info("El campo 'etiqueta_id' ya existe en la tabla 'conversiones'.")
+            connection.close()
+        except Exception as e:
+            self.logger.error("Error al crear la tabla 'etiquetas': %s", e)
             raise

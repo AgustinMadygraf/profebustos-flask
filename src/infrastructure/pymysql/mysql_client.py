@@ -71,3 +71,8 @@ class MySQLClient:
         except Exception as e:
             logger.error("Error al obtener conversiones: %s", e)
             raise
+
+    def get_connection(self):
+        "Devuelve la conexión actual a MySQL, asegurando que esté activa."
+        self.ensure_connection()
+        return self.connection
