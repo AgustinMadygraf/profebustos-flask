@@ -82,6 +82,7 @@ class App {
                 if (result.success) {
                     this.etiquetaModal.close();
                     await this.loadEtiquetas();
+                    await this.loadConversiones();
                 } else {
                     console.warn('Error al insertar etiqueta:', result.error);
                     this.etiquetaModal.showError(result.error || 'Error al insertar etiqueta');
