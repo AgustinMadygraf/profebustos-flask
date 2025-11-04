@@ -10,13 +10,13 @@ class MySQLConversionGateway(ConversionGateway):
         self.mysql_client = mysql_client
 
     def save(self, conversion):
-        # Guarda el timestamp tal como lo envía el frontend (en UTC)
         self.mysql_client.insert_conversion(
             conversion.tipo,
             conversion.timestamp,
             conversion.seccion,
             conversion.web,
-            conversion.tiempo_navegacion
+            conversion.tiempo_navegacion,
+            conversion.fuente_trafico
         )
 
     def get_all(self):

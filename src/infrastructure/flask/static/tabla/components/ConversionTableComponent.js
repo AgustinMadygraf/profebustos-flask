@@ -27,6 +27,7 @@ class ConversionTableComponent extends TableComponent {
             <td>${typeof conversionData.getTiempoNavegacionSegundos === 'function' ? conversionData.getTiempoNavegacionSegundos() : ''}</td>
             <td>${conversionData.seccion}</td>
             <td>${conversionData.web ? `<a href="${conversionData.web}" target="_blank" rel="noopener">${conversionData.web}</a>` : ''}</td>
+            <td>${conversionData.fuente_trafico || ''}</td>
             <td>${etiquetaCell}</td>
         `;
         return tr;

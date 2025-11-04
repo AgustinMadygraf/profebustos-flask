@@ -31,7 +31,7 @@ class App {
         console.info('Cargando conversiones...');
         try {
             const conversionesRaw = await this.conversionService.getConversiones();
-            // Convertir cada objeto en una instancia de Conversion
+                console.log('conversionesRaw:', conversionesRaw); // Depuración de datos crudos
             const conversiones = conversionesRaw.map(c => new Conversion(
                 c.id,
                 c.tipo,
@@ -39,8 +39,10 @@ class App {
                 c.tiempo_navegacion,
                 c.seccion,
                 c.web,
+                c.fuente_trafico,
                 c.etiqueta
             ));
+                console.log('conversiones:', conversiones); // Depuración de instancias Conversion
             this.conversiones = conversiones;
             this.conversionTable.render(conversiones, this.etiquetas || []);
             this.setupEtiquetaSelectorListener();
@@ -85,7 +87,6 @@ class App {
     }
 
     setupEventListeners() {
-        // Delegamos el manejo del formulario al componente modal
         this.etiquetaModal.setOnSubmit(async (etiquetaData) => {
             console.info('Formulario de etiqueta enviado:', etiquetaData);
             try {
@@ -106,7 +107,6 @@ class App {
     }
 }
 
-// Inicializar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     new App();
 });

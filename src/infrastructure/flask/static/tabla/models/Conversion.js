@@ -3,13 +3,14 @@ Path: models/Conversion.js
 */
 
 class Conversion {
-    constructor(id, tipo, timestamp, tiempo_navegacion, seccion, web, etiqueta = null) {
+    constructor(id, tipo, timestamp, tiempo_navegacion, seccion, web, fuente_trafico, etiqueta = null) {
         this.id = id;
         this.tipo = tipo;
         this.timestamp = timestamp;
         this.tiempo_navegacion = tiempo_navegacion;
         this.seccion = seccion;
         this.web = web;
+        this.fuente_trafico = fuente_trafico;
         this.etiqueta = etiqueta;
     }
 

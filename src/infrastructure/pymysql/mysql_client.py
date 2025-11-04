@@ -42,16 +42,16 @@ class MySQLClient:
         except (pymysql.Error, AttributeError):
             self.connect()
 
-    def insert_conversion(self, tipo, timestamp, seccion, web, tiempo_navegacion=None):
-        "Inserta un registro de conversión en la base de datos, incluyendo el campo web y tiempo_navegacion."
+    def insert_conversion(self, tipo, timestamp, seccion, web, tiempo_navegacion=None, fuente_trafico=None):
+        "Inserta un registro de conversión en la base de datos, incluyendo fuente_trafico."
         self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:
                 sql = """
-                    INSERT INTO conversiones (tipo, timestamp, seccion, web, tiempo_navegacion)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO conversiones (tipo, timestamp, seccion, web, tiempo_navegacion, fuente_trafico)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(sql, (tipo, timestamp, seccion, web, tiempo_navegacion))
+                cursor.execute(sql, (tipo, timestamp, seccion, web, tiempo_navegacion, fuente_trafico))
                 self.connection.commit()
                 logger.info("Conversión insertada correctamente")
         except Exception as e:

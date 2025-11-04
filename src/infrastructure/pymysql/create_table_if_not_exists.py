@@ -51,17 +51,15 @@ class TableCreator:
                         );
                     """)
                     self.logger.info("La tabla 'conversiones' fue creada correctamente.")
-                # Agregar columna 'puntaje_lead' si no existe
-                cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'puntaje_lead';")
-                puntaje_lead_column = cursor.fetchone()
-                if not puntaje_lead_column:
-                    cursor.execute("""
-                        ALTER TABLE conversiones
-                        ADD COLUMN puntaje_lead TINYINT UNSIGNED DEFAULT NULL;
-                    """)
-                    self.logger.info("El campo 'puntaje_lead' fue agregado a la tabla 'conversiones'.")
+
+                # Verifica y agrega el campo 'fuente_trafico' si falta
+                cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'fuente_trafico';")
+                fuente_trafico_column = cursor.fetchone()
+                if not fuente_trafico_column:
+                    cursor.execute("ALTER TABLE conversiones ADD COLUMN fuente_trafico VARCHAR(50) NULL;")
+                    self.logger.info("El campo 'fuente_trafico' fue agregado a la tabla 'conversiones'.")
                 else:
-                    self.logger.info("El campo 'puntaje_lead' ya existe en la tabla 'conversiones'.")
+                    self.logger.info("El campo 'fuente_trafico' ya existe en la tabla 'conversiones'.")
             connection.close()
         except Exception as e:
             self.logger.error("Error al crear la tabla: %s", e)
