@@ -15,7 +15,8 @@ class MySQLConversionGateway(ConversionGateway):
             conversion.tipo,
             conversion.timestamp,
             conversion.seccion,
-            conversion.web
+            conversion.web,
+            conversion.tiempo_navegacion
         )
 
     def get_all(self):

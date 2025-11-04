@@ -34,6 +34,12 @@ class TableCreator:
                         self.logger.info("El campo 'web' fue agregado a la tabla 'conversiones'.")
                     else:
                         self.logger.info("El campo 'web' ya existe en la tabla 'conversiones'.")
+                        # Verifica y agrega el campo 'tiempo_navegacion' si falta
+                        cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'tiempo_navegacion';")
+                        tiempo_navegacion_column = cursor.fetchone()
+                        if not tiempo_navegacion_column:
+                            cursor.execute("ALTER TABLE conversiones ADD COLUMN tiempo_navegacion INT NULL;")
+                            self.logger.info("El campo 'tiempo_navegacion' fue agregado a la tabla 'conversiones'.")
                 else:
                     cursor.execute("""
                         CREATE TABLE conversiones (
