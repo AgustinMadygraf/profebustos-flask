@@ -7,6 +7,7 @@ import EtiquetaService from './services/EtiquetaService.js';
 import ConversionTableComponent from './components/ConversionTableComponent.js';
 import EtiquetaTableComponent from './components/EtiquetaTableComponent.js';
 import EtiquetaModalComponent from './components/EtiquetaModalComponent.js';
+import Conversion from './models/Conversion.js';
 
 class App {
     constructor() {
@@ -29,7 +30,17 @@ class App {
     async loadConversiones() {
         console.info('Cargando conversiones...');
         try {
-            const conversiones = await this.conversionService.getConversiones();
+            const conversionesRaw = await this.conversionService.getConversiones();
+            // Convertir cada objeto en una instancia de Conversion
+            const conversiones = conversionesRaw.map(c => new Conversion(
+                c.id,
+                c.tipo,
+                c.timestamp,
+                c.tiempo_navegacion,
+                c.seccion,
+                c.web,
+                c.etiqueta
+            ));
             this.conversiones = conversiones;
             this.conversionTable.render(conversiones, this.etiquetas || []);
             this.setupEtiquetaSelectorListener();

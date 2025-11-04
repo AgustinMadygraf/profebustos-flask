@@ -24,6 +24,7 @@ class ConversionTableComponent extends TableComponent {
             <td>${conversionData.id}</td>
             <td>${conversionData.tipo}</td>
             <td>${DateFormatter.toBuenosAiresDateTime(conversionData.timestamp)}</td>
+            <td>${typeof conversionData.getTiempoNavegacionSegundos === 'function' ? conversionData.getTiempoNavegacionSegundos() : ''}</td>
             <td>${conversionData.seccion}</td>
             <td>${conversionData.web || ''}</td>
             <td>${etiquetaCell}</td>
