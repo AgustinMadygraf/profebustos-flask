@@ -17,20 +17,7 @@ from src.infrastructure.pymysql.mysql_client import MySQLClient
 logger = get_logger("flask_app")
 
 app = Flask(__name__)
-CORS(app, origins="*", supports_credentials=True)
-
-@app.after_request
-def add_cors_headers(response):
-    " Agrega los encabezados CORS necesarios a la respuesta."
-    origin = request.headers.get('Origin')
-    allowed_origins = ["http://profebustos.com.ar", "http://localhost:5173"]
-    if origin in allowed_origins:
-        response.headers["Access-Control-Allow-Origin"] = origin
-    else:
-        response.headers["Access-Control-Allow-Origin"] = "http://profebustos.com.ar"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    return response
+CORS(app, origins=["https://profebustos.com.ar", "http://localhost:5173"], supports_credentials=True)
 
 @app.route('/')
 def hello_world():
