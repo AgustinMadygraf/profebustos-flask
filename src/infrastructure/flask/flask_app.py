@@ -17,7 +17,7 @@ from src.infrastructure.pymysql.mysql_client import MySQLClient
 logger = get_logger("flask_app")
 
 app = Flask(__name__)
-CORS(app, origins=["http://profebustos.com.ar", "http://localhost:5173"], supports_credentials=True)
+CORS(app, origins="*", supports_credentials=True)
 
 @app.after_request
 def add_cors_headers(response):
