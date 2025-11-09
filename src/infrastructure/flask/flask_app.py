@@ -4,14 +4,12 @@ Path: src/infrastructure/flask/flask_app.py
 
 import re
 import os
+import uuid
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 from src.shared.logger_flask_v0 import get_logger
 
-from src.interface_adapters.controllers.registrar_conversion_controller import RegistrarConversionController
-from src.interface_adapters.gateways.mysql_conversion_gateway import MySQLConversionGateway
-from src.interface_adapters.presenters.conversion_presenter import ConversionPresenter
 from src.infrastructure.pymysql.mysql_client import MySQLClient
 
 logger = get_logger("flask_app")
@@ -33,176 +31,79 @@ def health_check():
 
 # Instancia única de dependencias
 mysql_client = MySQLClient()
-gateway = MySQLConversionGateway(mysql_client)
-presenter = ConversionPresenter()
-controller = RegistrarConversionController(gateway, presenter)
 
-# Nueva ruta para ver todas las conversiones
-@app.route('/conversiones', methods=['GET'])
-def ver_conversiones():
-    "Devuelve todos los registros de la tabla conversiones como JSON."
-    logger.info("Solicitud a /conversiones")
+# Nuevo endpoint para registrar datos de contacto
+@app.route('/v1/contact/email', methods=['POST'])
+def registrar_contacto():
+    """
+    Endpoint para registrar datos de contacto.
+    Espera JSON: { name, email, company?, message, page_location?, traffic_source? }
+    """
+    logger.info("Solicitud a /v1/contact/email")
+    if not request.is_json:
+        logger.warning("Content-Type inválido")
+        return jsonify({'success': False, 'error': 'Formato JSON requerido'}), 400
+    data = request.get_json()
+    # Validación básica
+    name = str(data.get('name', '')).strip()
+    email = str(data.get('email', '')).strip()
+    company = str(data.get('company', '')).strip()
+    message = str(data.get('message', '')).strip()
+    page_location = str(data.get('page_location', '')).strip()
+    traffic_source = str(data.get('traffic_source', '')).strip()
+
+    # Normalizar espacios
+    name = re.sub(r'\s+', ' ', name)
+    company = re.sub(r'\s+', ' ', company)
+
+    # Validaciones mínimas
+    if not name or not email or not message:
+        logger.warning("Campos requeridos faltantes")
+        return jsonify({'success': False, 'error': 'Faltan campos requeridos'}), 400
+    if len(name) > 120 or len(company) > 160 or len(message) > 1200:
+        logger.warning("Longitud de campos excedida")
+        return jsonify({'success': False, 'error': 'Longitud de campos excedida'}), 400
+    # Validación simple de email
+    email_regex = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+    if not re.match(email_regex, email):
+        logger.warning("Formato de email inválido: %s", email)
+        return jsonify({'success': False, 'error': 'El correo electrónico tiene un formato inválido'}), 400
+
+    # Limpiar message de HTML básico
+    message = re.sub(r'<[^>]+>', '', message)
+
+    # Generar ticket_id
+    ticket_id = str(uuid.uuid4())
+
+    # Guardar en MySQL (debes crear la tabla y método adecuado en mysql_client)
     try:
-        registros = gateway.get_all()
-        return jsonify(registros), 200
-    except (ConnectionError, OSError, RuntimeError) as e:
-        logger.exception("Error al obtener conversiones: %s", str(e))
-        return jsonify({
-            'success': False,
-            'error': f'Ocurrió un error técnico. Detalle: {str(e)}'
-        }), 500
+        mysql_client.insert_contacto(
+            ticket_id=ticket_id,
+            name=name,
+            email=email,
+            company=company,
+            message=message,
+            page_location=page_location,
+            traffic_source=traffic_source,
+            ip=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', '')
+        )
+        logger.info("Contacto registrado: %s %s %s", ticket_id, name, email)
+        return jsonify({'success': True, 'ticket_id': ticket_id}), 201
+    except (ConnectionError, TimeoutError, ValueError) as e:
+        logger.exception("Error al guardar contacto: %s", str(e))
+        return jsonify({'success': False, 'error': 'Error al registrar el contacto'}), 500
 
-@app.route('/registrar_conversion.php', methods=['POST', 'OPTIONS'])
-def registrar_conversion():
-    "Endpoint para registrar conversiones."
-    logger.info("Solicitud a /registrar_conversion.php")
-    if request.method == 'OPTIONS':
-        logger.info("Preflight OPTIONS recibido")
-        return '', 200
 
-    try:
-        if request.method != 'POST':
-            logger.warning("Método no permitido: %s", request.method)
-            return jsonify({
-                'success': False,
-                'error': 'Método no permitido'
-            }), 405
-
-        if not request.is_json:
-            logger.warning("Content-Type inválido")
-            return jsonify({
-                'success': False,
-                'error': 'Datos incompletos o formato inválido'
-            }), 400
-
-        data = request.get_json()
-        required_fields = ['tipo', 'timestamp', 'seccion']
-        if not data or not all(field in data for field in required_fields):
-            logger.warning("Campos requeridos faltantes")
-            return jsonify({
-                'success': False,
-                'error': 'Datos incompletos o formato inválido'
-            }), 400
-
-        timestamp = data['timestamp']
-        seccion = data['seccion']
-
-        iso_pattern = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?$'
-        if not re.match(iso_pattern, timestamp):
-            logger.warning("Formato de timestamp inválido: %s", timestamp)
-            return jsonify({
-                'success': False,
-                'error': 'Datos incompletos o formato inválido'
-            }), 400
-
-        if timestamp[-1] == '0':
-            logger.info("Conversión duplicada detectada")
-            return jsonify({
-                'success': False,
-                'error': 'Conversión duplicada detectada'
-            }), 429
-
-        if seccion == 'error':
-            logger.error("Error técnico simulado")
-            return jsonify({
-                'success': False,
-                'error': 'Ocurrió un error técnico. Intenta nuevamente más tarde.'
-            }), 500
-
-        logger.info("Procesando conversión: %s", data)
-        try:
-            result = controller.handle(data)
-            logger.info("Resultado de conversión: %s", result)
-        except (ConnectionError, OSError, RuntimeError) as e:
-            logger.exception("Error en RegistrarConversionController: %s", str(e))
-            return jsonify({
-                'success': False,
-                'error': f'Ocurrió un error técnico en el controlador: {str(e)}'
-            }), 500
-
-        return jsonify(result)
-    except (ValueError, KeyError, TypeError) as e:
-        logger.exception("Error de validación en registrar_conversion: %s", str(e))
-        return jsonify({
-            'success': False,
-            'error': 'Datos incompletos o formato inválido'
-        }), 400
-
+# Servir archivos estáticos para visualizar contactos
 @app.route('/tabla')
 def tabla_index():
-    "Ruta para servir el archivo index.html de la tabla."
+    "Ruta para servir el archivo index.html de la tabla de contactos."
     ruta_real = os.path.join(app.static_folder, 'tabla')
     return send_from_directory(ruta_real, 'index.html')
 
 
-# Etiquetas: GET y POST
-@app.route('/etiquetas', methods=['GET'])
-def obtener_etiquetas():
-    "Devuelve una lista dinámica de etiquetas desde la base de datos."
-    try:
-        etiquetas = mysql_client.get_all_etiquetas()
-        return jsonify(etiquetas), 200
-    except (ConnectionError, OSError, RuntimeError) as e:
-        logger.error("Error al obtener etiquetas: %s", str(e))
-        return jsonify({
-            'success': False,
-            'error': f'Ocurrió un error técnico al obtener etiquetas: {str(e)}'
-        }), 500
 
-@app.route('/etiquetas', methods=['POST'])
-def crear_etiqueta():
-    "Crea una nueva etiqueta en la base de datos."
-    if not request.is_json:
-        logger.debug("Formato JSON requerido en POST /etiquetas")
-        return jsonify({'success': False, 'error': 'Formato JSON requerido'}), 400
-    data = request.get_json()
-    nombre = data.get('nombre', '').strip()
-    descripcion = data.get('descripcion', '').strip()
-    logger.debug("Datos recibidos: nombre=%s, descripcion=%s", nombre, descripcion)
-    if not nombre:
-        logger.debug("Nombre de etiqueta vacío en POST /etiquetas")
-        return jsonify({'success': False, 'error': 'El nombre es requerido'}), 400
-    try:
-        # Guardar en la base de datos
-        nueva_id = mysql_client.insert_etiqueta(nombre, descripcion)
-        logger.info("Etiqueta creada: id=%s, nombre=%s, descripcion=%s", nueva_id, nombre, descripcion)
-        return jsonify({'success': True, 'id': nueva_id, 'nombre': nombre, 'descripcion': descripcion}), 201
-    except (ConnectionError, OSError, RuntimeError, ValueError) as e:
-        logger.error("Error al crear etiqueta: %s", str(e))
-        return jsonify({'success': False, 'error': f'No se pudo crear la etiqueta: {str(e)}'}), 500
-
-@app.route('/conversiones/<int:conversion_id>/etiqueta', methods=['POST'])
-def asignar_etiqueta_a_conversion(conversion_id):
-    """
-    Asigna una etiqueta existente a una conversión solo si no tiene etiqueta.
-    Espera JSON: { "etiqueta_id": <int> }
-    """
-    if not request.is_json:
-        return jsonify({'success': False, 'error': 'Formato JSON requerido'}), 400
-    data = request.get_json()
-    etiqueta_id = data.get('etiqueta_id')
-    if not etiqueta_id:
-        return jsonify({'success': False, 'error': 'etiqueta_id requerido'}), 400
-
-    try:
-        # Verifica conversión
-        conversion = mysql_client.get_conversion_by_id(conversion_id)
-        if not conversion:
-            return jsonify({'success': False, 'error': 'Conversión no encontrada'}), 404
-        if conversion.get('etiqueta_id'):
-            return jsonify({'success': False, 'error': 'La conversión ya tiene etiqueta'}), 409
-
-        # Verifica etiqueta
-        etiqueta = mysql_client.get_etiqueta_by_id(etiqueta_id)
-        if not etiqueta:
-            return jsonify({'success': False, 'error': 'Etiqueta no encontrada'}), 404
-
-        # Actualiza conversión
-        mysql_client.update_conversion_etiqueta(conversion_id, etiqueta_id)
-        return jsonify({'success': True}), 200
-    except (ConnectionError, OSError, RuntimeError, ValueError) as e:
-        logger.error("Error al asignar etiqueta: %s", str(e))
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.errorhandler(404)
 def not_found_error(e):

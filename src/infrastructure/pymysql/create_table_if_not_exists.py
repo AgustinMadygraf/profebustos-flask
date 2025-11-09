@@ -11,8 +11,8 @@ class TableCreator:
     def __init__(self):
         self.logger = get_logger("profebustos.tablecreator")
 
-    def create_conversiones_table(self):
-        "Crea la tabla 'conversiones' si no existe y agrega el campo 'web' si falta."
+    def create_contactos_table(self):
+        "Crea la tabla 'contactos' si no existe, según el modelo de contacto actual."
         try:
             connection = pymysql.connect(
                 host=MYSQL_HOST,
@@ -22,86 +22,28 @@ class TableCreator:
                 cursorclass=pymysql.cursors.DictCursor
             )
             with connection.cursor() as cursor:
-                cursor.execute("SHOW TABLES LIKE %s", ("conversiones",))
-                result = cursor.fetchone()
-                if result:
-                    self.logger.info("La tabla 'conversiones' ya existía.")
-                    # Verifica si el campo 'web' existe
-                    cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'web';")
-                    web_column = cursor.fetchone()
-                    if not web_column:
-                        cursor.execute("ALTER TABLE conversiones ADD COLUMN web VARCHAR(255);")
-                        self.logger.info("El campo 'web' fue agregado a la tabla 'conversiones'.")
-                    else:
-                        self.logger.info("El campo 'web' ya existe en la tabla 'conversiones'.")
-                        # Verifica y agrega el campo 'tiempo_navegacion' si falta
-                        cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'tiempo_navegacion';")
-                        tiempo_navegacion_column = cursor.fetchone()
-                        if not tiempo_navegacion_column:
-                            cursor.execute("ALTER TABLE conversiones ADD COLUMN tiempo_navegacion INT NULL;")
-                            self.logger.info("El campo 'tiempo_navegacion' fue agregado a la tabla 'conversiones'.")
-                else:
-                    cursor.execute("""
-                        CREATE TABLE conversiones (
-                            id INT AUTO_INCREMENT PRIMARY KEY,
-                            tipo VARCHAR(50) NOT NULL,
-                            timestamp VARCHAR(50) NOT NULL,
-                            seccion VARCHAR(50) NOT NULL,
-                            web VARCHAR(255)
-                        );
-                    """)
-                    self.logger.info("La tabla 'conversiones' fue creada correctamente.")
-
-                # Verifica y agrega el campo 'fuente_trafico' si falta
-                cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'fuente_trafico';")
-                fuente_trafico_column = cursor.fetchone()
-                if not fuente_trafico_column:
-                    cursor.execute("ALTER TABLE conversiones ADD COLUMN fuente_trafico VARCHAR(50) NULL;")
-                    self.logger.info("El campo 'fuente_trafico' fue agregado a la tabla 'conversiones'.")
-                else:
-                    self.logger.info("El campo 'fuente_trafico' ya existe en la tabla 'conversiones'.")
-            connection.close()
-        except Exception as e:
-            self.logger.error("Error al crear la tabla: %s", e)
-            raise
-
-    def create_etiquetas_table(self):
-        "Crea la tabla 'etiquetas' si no existe."
-        try:
-            connection = pymysql.connect(
-                host=MYSQL_HOST,
-                user=MYSQL_USER,
-                password=MYSQL_PASSWORD,
-                database=MYSQL_DB,
-                cursorclass=pymysql.cursors.DictCursor
-            )
-            with connection.cursor() as cursor:
-                cursor.execute("SHOW TABLES LIKE %s", ("etiquetas",))
+                cursor.execute("SHOW TABLES LIKE %s", ("contactos",))
                 result = cursor.fetchone()
                 if not result:
                     cursor.execute("""
-                        CREATE TABLE etiquetas (
+                        CREATE TABLE contactos (
                             id INT AUTO_INCREMENT PRIMARY KEY,
-                            nombre VARCHAR(50) UNIQUE NOT NULL,
-                            descripcion VARCHAR(255) NULL
+                            ticket_id VARCHAR(36) NOT NULL,
+                            name VARCHAR(120) NOT NULL,
+                            email VARCHAR(255) NOT NULL,
+                            company VARCHAR(160) NULL,
+                            message VARCHAR(1200) NOT NULL,
+                            page_location VARCHAR(512) NULL,
+                            traffic_source VARCHAR(128) NULL,
+                            ip VARCHAR(45) NULL,
+                            user_agent VARCHAR(512) NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
                         );
                     """)
-                    self.logger.info("La tabla 'etiquetas' fue creada correctamente.")
+                    self.logger.info("La tabla 'contactos' fue creada correctamente.")
                 else:
-                    self.logger.info("La tabla 'etiquetas' ya existía.")
-                # Agregar columna 'etiqueta_id' a conversiones si no existe
-                cursor.execute("SHOW COLUMNS FROM conversiones LIKE 'etiqueta_id';")
-                etiqueta_id_column = cursor.fetchone()
-                if not etiqueta_id_column:
-                    cursor.execute("""
-                        ALTER TABLE conversiones
-                        ADD COLUMN etiqueta_id INT NULL,
-                        ADD FOREIGN KEY (etiqueta_id) REFERENCES etiquetas(id);
-                    """)
-                    self.logger.info("El campo 'etiqueta_id' fue agregado a la tabla 'conversiones'.")
-                else:
-                    self.logger.info("El campo 'etiqueta_id' ya existe en la tabla 'conversiones'.")
+                    self.logger.info("La tabla 'contactos' ya existía.")
             connection.close()
         except Exception as e:
-            self.logger.error("Error al crear la tabla 'etiquetas': %s", e)
+            self.logger.error("Error al crear la tabla 'contactos': %s", e)
             raise
