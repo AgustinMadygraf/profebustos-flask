@@ -63,9 +63,7 @@ class MySQLClient:
             raise
 
     def get_all_contactos(self):
-        """
-        Devuelve una lista de todos los contactos registrados en la base de datos.
-        """
+        "Devuelve una lista de todos los contactos registrados en la base de datos."
         self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:

@@ -35,10 +35,7 @@ mysql_client = MySQLClient()
 # Nuevo endpoint para registrar datos de contacto
 @app.route('/v1/contact/email', methods=['POST'])
 def registrar_contacto():
-    """
-    Endpoint para registrar datos de contacto.
-    Espera JSON: { name, email, company?, message, page_location?, traffic_source? }
-    """
+    "Registra un contacto recibido vía POST en formato JSON."
     logger.info("Solicitud a /v1/contact/email")
     if not request.is_json:
         logger.warning("Content-Type inválido")
