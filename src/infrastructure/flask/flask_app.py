@@ -2,15 +2,17 @@
 Path: src/infrastructure/flask/flask_app.py
 """
 
-import re
 import os
-import uuid
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 from src.shared.logger_flask_v0 import get_logger
 
 from src.infrastructure.pymysql.mysql_client import MySQLClient
+from src.interface_adapters.gateways.contact_repository_adapter import ContactRepositoryAdapter
+from src.interface_adapters.controllers.contact_controller import ContactController
+from src.interface_adapters.presenters.contact_presenter import ContactPresenter
+from src.use_cases.register_contact import RegisterContactUseCase
 
 logger = get_logger("flask_app")
 
@@ -32,61 +34,19 @@ def health_check():
 # Instancia única de dependencias
 mysql_client = MySQLClient()
 
+contact_repository = ContactRepositoryAdapter(mysql_client)
+register_contact_use_case = RegisterContactUseCase(contact_repository)
+contact_controller = ContactController(register_contact_use_case)
+
 # Nuevo endpoint para registrar datos de contacto
 @app.route('/v1/contact/email', methods=['POST'])
 def registrar_contacto():
-    "Registra un contacto recibido vía POST en formato JSON."
     logger.info("Solicitud a /v1/contact/email")
-    if not request.is_json:
-        logger.warning("Content-Type inválido")
-        return jsonify({'success': False, 'error': 'Formato JSON requerido'}), 400
-    data = request.get_json()
-    # Validación básica
-    name = str(data.get('name', '')).strip()
-    email = str(data.get('email', '')).strip()
-    company = str(data.get('company', '')).strip()
-    message = str(data.get('message', '')).strip()
-    page_location = str(data.get('page_location', '')).strip()
-    traffic_source = str(data.get('traffic_source', '')).strip()
-
-
-    # Normalizar espacios
-    name = re.sub(r'\s+', ' ', name)
-    company = re.sub(r'\s+', ' ', company)
-
-    # Validaciones mínimas (ahora 'message' puede estar vacío)
-    if not name or not email:
-        return jsonify({'success': False, 'error': 'Faltan campos requeridos'}), 400
-    if len(name) > 120 or len(company) > 160 or len(message) > 1200:
-        return jsonify({'success': False, 'error': 'Longitud de campos excedida'}), 400
-    # Validación simple de email
-    email_regex = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-    if not re.match(email_regex, email):
-        return jsonify({'success': False, 'error': 'El correo electrónico tiene un formato inválido'}), 400
-
-    # Limpiar message de HTML básico
-    message = re.sub(r'<[^>]+>', '', message)
-
-    # Generar ticket_id
-    ticket_id = str(uuid.uuid4())
-
-    # Guardar en MySQL (debes crear la tabla y método adecuado en mysql_client)
-    try:
-        mysql_client.insert_contacto(
-            ticket_id=ticket_id,
-            name=name,
-            email=email,
-            company=company,
-            message=message,
-            page_location=page_location,
-            traffic_source=traffic_source,
-            ip=request.remote_addr,
-            user_agent=request.headers.get('User-Agent', '')
-        )
-        return jsonify({'success': True, 'ticket_id': ticket_id}), 201
-    except (ConnectionError, TimeoutError, ValueError) as e:
-        logger.exception("Error al registrar contacto: %s", str(e))
-        return jsonify({'success': False, 'error': 'Error al registrar el contacto'}), 500
+    response, status = contact_controller.registrar_contacto(request)
+    if response.get('success') and 'contact' in response:
+        contact = response.pop('contact')
+        return jsonify(ContactPresenter.to_response(contact)), status
+    return jsonify(response), status
 
 # Nuevo endpoint para listar contactos registrados
 @app.route('/v1/contact/list', methods=['GET'])
