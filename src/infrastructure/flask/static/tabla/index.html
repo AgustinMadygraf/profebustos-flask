@@ -2,73 +2,33 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Tabla de Conversiones</title>
+  <title>Contactos registrados</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="icon" href="data:,">
 </head>
 <body>
+
 <div class="container mt-5">
-    <h2 class="mb-4">Conversiones registradas</h2>
-    <table class="table table-bordered table-striped" id="conversiones-table">
+    <h2 class="mb-4">Contactos registrados</h2>
+    <table class="table table-bordered table-striped" id="contactos-table">
         <thead class="table-dark">
             <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Timestamp</th>
-                <th>Tiempo navegación (s)</th>
-                <th>Sección</th>
-                <th>Web</th>
-                <th>Fuente de tráfico</th>
-                <th>Etiqueta</th>
+                <th>Ticket ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Empresa</th>
+                <th>Mensaje</th>
+                <th>Página origen</th>
+                <th>Fuente tráfico</th>
+                <th>IP</th>
+                <th>User Agent</th>
+                <th>Fecha creación</th>
             </tr>
         </thead>
         <tbody>
         </tbody>
     </table>
     <div id="error-message" class="alert alert-danger d-none"></div>
-
-    <h2 class="mb-4 mt-5">Etiquetas disponibles</h2>
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modalEtiqueta">
-        Insertar nueva etiqueta
-    </button>
-    <table class="table table-bordered table-striped" id="etiquetas-table">
-        <thead class="table-primary">
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Descripción</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-    <div id="error-etiquetas" class="alert alert-danger d-none"></div>
-
-    <div class="modal fade" id="modalEtiqueta" tabindex="-1" aria-labelledby="modalEtiquetaLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form id="form-etiqueta" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalEtiquetaLabel">Nueva Etiqueta</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="nombre-etiqueta" class="form-label">Nombre</label>
-              <input type="text" class="form-control" id="nombre-etiqueta" required>
-            </div>
-            <div class="mb-3">
-              <label for="descripcion-etiqueta" class="form-label">Descripción</label>
-              <input type="text" class="form-control" id="descripcion-etiqueta">
-            </div>
-            <div id="error-insertar-etiqueta" class="alert alert-danger d-none"></div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">Guardar</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

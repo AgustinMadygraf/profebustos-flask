@@ -61,3 +61,23 @@ class MySQLClient:
         except Exception as e:
             logger.error("Error al insertar contacto: %s", e)
             raise
+
+    def get_all_contactos(self):
+        """
+        Devuelve una lista de todos los contactos registrados en la base de datos.
+        """
+        self.ensure_connection()
+        try:
+            with self.connection.cursor() as cursor:
+                sql = """
+                    SELECT ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent, created_at
+                    FROM contactos
+                    ORDER BY created_at DESC
+                """
+                cursor.execute(sql)
+                contactos = cursor.fetchall()
+                logger.info("%d contactos recuperados", len(contactos))
+                return contactos
+        except Exception as e:
+            logger.error("Error al obtener contactos: %s", e)
+            raise

@@ -94,6 +94,18 @@ def registrar_contacto():
         logger.exception("Error al guardar contacto: %s", str(e))
         return jsonify({'success': False, 'error': 'Error al registrar el contacto'}), 500
 
+# Nuevo endpoint para listar contactos registrados
+@app.route('/v1/contact/list', methods=['GET'])
+def listar_contactos():
+    "Devuelve la lista de todos los contactos registrados."
+    logger.info("Solicitud a /v1/contact/list")
+    try:
+        contactos = mysql_client.get_all_contactos()
+        # contactos debe ser una lista de dicts con todos los campos relevantes
+        return jsonify({'success': True, 'contactos': contactos}), 200
+    except (ConnectionError, TimeoutError, ValueError) as e:
+        logger.exception("Error al obtener contactos: %s", str(e))
+        return jsonify({'success': False, 'error': 'Error al obtener los contactos'}), 500
 
 # Servir archivos estáticos para visualizar contactos
 @app.route('/tabla')
@@ -101,9 +113,6 @@ def tabla_index():
     "Ruta para servir el archivo index.html de la tabla de contactos."
     ruta_real = os.path.join(app.static_folder, 'tabla')
     return send_from_directory(ruta_real, 'index.html')
-
-
-
 
 @app.errorhandler(404)
 def not_found_error(e):
