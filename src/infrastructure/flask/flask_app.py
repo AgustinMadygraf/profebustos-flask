@@ -56,8 +56,8 @@ def registrar_contacto():
     name = re.sub(r'\s+', ' ', name)
     company = re.sub(r'\s+', ' ', company)
 
-    # Validaciones mínimas
-    if not name or not email or not message:
+    # Validaciones mínimas (ahora 'message' puede estar vacío)
+    if not name or not email:
         logger.warning("Campos requeridos faltantes")
         return jsonify({'success': False, 'error': 'Faltan campos requeridos'}), 400
     if len(name) > 120 or len(company) > 160 or len(message) > 1200:
