@@ -49,21 +49,19 @@ def registrar_contacto():
     page_location = str(data.get('page_location', '')).strip()
     traffic_source = str(data.get('traffic_source', '')).strip()
 
+
     # Normalizar espacios
     name = re.sub(r'\s+', ' ', name)
     company = re.sub(r'\s+', ' ', company)
 
     # Validaciones mínimas (ahora 'message' puede estar vacío)
     if not name or not email:
-        logger.warning("Campos requeridos faltantes")
         return jsonify({'success': False, 'error': 'Faltan campos requeridos'}), 400
     if len(name) > 120 or len(company) > 160 or len(message) > 1200:
-        logger.warning("Longitud de campos excedida")
         return jsonify({'success': False, 'error': 'Longitud de campos excedida'}), 400
     # Validación simple de email
     email_regex = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
     if not re.match(email_regex, email):
-        logger.warning("Formato de email inválido: %s", email)
         return jsonify({'success': False, 'error': 'El correo electrónico tiene un formato inválido'}), 400
 
     # Limpiar message de HTML básico
@@ -85,10 +83,9 @@ def registrar_contacto():
             ip=request.remote_addr,
             user_agent=request.headers.get('User-Agent', '')
         )
-        logger.info("Contacto registrado: %s %s %s", ticket_id, name, email)
         return jsonify({'success': True, 'ticket_id': ticket_id}), 201
     except (ConnectionError, TimeoutError, ValueError) as e:
-        logger.exception("Error al guardar contacto: %s", str(e))
+        logger.exception("Error al registrar contacto: %s", str(e))
         return jsonify({'success': False, 'error': 'Error al registrar el contacto'}), 500
 
 # Nuevo endpoint para listar contactos registrados
