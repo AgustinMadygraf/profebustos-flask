@@ -1,5 +1,5 @@
 """
-Path: use_cases/register_contact.py
+Path: src/use_cases/register_contact.py
 """
 
 import uuid
@@ -24,5 +24,5 @@ class RegisterContactUseCase:
             ip=ip,
             user_agent=user_agent
         )
-        self.contact_repository.insert_contact(contact)
-        return contact
+        saved_contact = self.contact_repository.save(contact)
+        return saved_contact

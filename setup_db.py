@@ -6,7 +6,7 @@ Path: setup_db.py
 
 from src.infrastructure.pymysql.create_db_if_not_exists import DatabaseCreator
 from src.infrastructure.pymysql.create_table_if_not_exists import TableCreator
-from src.infrastructure.setup import MySQLSetupChecker
+from src.infrastructure.pymysql.setup import MySQLSetupChecker
 
 if __name__ == "__main__":
     db_creator = DatabaseCreator()

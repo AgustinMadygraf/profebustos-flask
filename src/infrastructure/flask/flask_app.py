@@ -54,8 +54,7 @@ def listar_contactos():
     "Devuelve la lista de todos los contactos registrados."
     logger.info("Solicitud a /v1/contact/list")
     try:
-        contactos = mysql_client.get_all_contactos()
-        # contactos debe ser una lista de dicts con todos los campos relevantes
+        contactos = contact_repository.get_all()
         return jsonify({'success': True, 'contactos': contactos}), 200
     except (ConnectionError, TimeoutError, ValueError) as e:
         logger.exception("Error al obtener contactos: %s", str(e))

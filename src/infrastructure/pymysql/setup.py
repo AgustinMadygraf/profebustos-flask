@@ -1,5 +1,5 @@
 """
-Script de verificación de entorno MySQL para profebustos-flask.
+Path: src/infrastructure/pymysql/setup.py
 """
 
 import pymysql

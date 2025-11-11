@@ -9,8 +9,8 @@ class ContactRepositoryAdapter(ContactRepository):
     def __init__(self, client):
         self.mysql_client = client
 
-    def insert_contact(self, contact):
-        "Inserta un contacto en la base de datos usando mysql_client."
+    def save(self, contact):
+        "Guarda un contacto usando mysql_client y retorna el contacto guardado."
         self.mysql_client.insert_contacto(
             ticket_id=contact.ticket_id,
             name=contact.name,
@@ -22,3 +22,8 @@ class ContactRepositoryAdapter(ContactRepository):
             ip=contact.ip,
             user_agent=contact.user_agent
         )
+        return contact
+
+    def get_all(self):
+        "Devuelve una lista de todos los contactos usando mysql_client."
+        return self.mysql_client.get_all_contactos()
