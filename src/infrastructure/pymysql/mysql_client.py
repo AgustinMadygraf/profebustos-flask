@@ -27,8 +27,20 @@ def _load_db_config(host=None, user=None, password=None, db=None, port=None):
     return {
         "host": host or os.getenv("MYSQLHOST") or os.getenv("MYSQL_HOST") or MYSQL_HOST,
         "user": user or os.getenv("MYSQLUSER") or os.getenv("MYSQL_USER") or MYSQL_USER,
-        "password": password or os.getenv("MYSQLPASSWORD") or os.getenv("MYSQL_PASSWORD") or MYSQL_PASSWORD,
-        "db": db or os.getenv("MYSQLDATABASE") or os.getenv("MYSQL_DB") or MYSQL_DB,
+        "password": (
+            password
+            or os.getenv("MYSQLPASSWORD")
+            or os.getenv("MYSQL_PASSWORD")
+            or os.getenv("MYSQL_ROOT_PASSWORD")
+            or MYSQL_PASSWORD
+        ),
+        "db": (
+            db
+            or os.getenv("MYSQLDATABASE")
+            or os.getenv("MYSQL_DATABASE")
+            or os.getenv("MYSQL_DB")
+            or MYSQL_DB
+        ),
         "port": int(port or os.getenv("MYSQLPORT") or os.getenv("MYSQL_PORT") or 3306),
     }
 

@@ -27,7 +27,8 @@
    MYSQL_HOST=localhost
    MYSQL_USER=tu_usuario
    MYSQL_PASSWORD=tu_contraseña
-   MYSQL_DB=profebustos
+   MYSQL_DATABASE=profebustos
+   ORIGIN_VERIFY_SECRET=tu_secreto_local
    FLASK_ENV=development
    ```
 
@@ -63,7 +64,8 @@
      echo "MYSQL_HOST=tu_usuario.mysql.pythonanywhere-services.com" >> .env.remote
      echo "MYSQL_USER=tu_usuario" >> .env.remote
      echo "MYSQL_PASSWORD=tu_contraseña" >> .env.remote
-     echo "MYSQL_DB=tu_base_de_datos" >> .env.remote
+     echo "MYSQL_DATABASE=tu_base_de_datos" >> .env.remote
+     echo "ORIGIN_VERIFY_SECRET=tu_secreto" >> .env.remote
      echo "FLASK_ENV=production" >> .env.remote
      ```
 

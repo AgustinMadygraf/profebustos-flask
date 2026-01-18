@@ -30,10 +30,10 @@ Alternativa por variables separadas:
 - `MYSQLPORT`
 - `MYSQLUSER`
 - `MYSQLPASSWORD`
-- `MYSQLDATABASE`
+- `MYSQLDATABASE` o `MYSQL_DATABASE`
 
 Seguridad:
-- `ORIGIN_VERIFY_SECRET` (mismo valor que Cloudflare inyecta en `X-Origin-Verify`)
+- `ORIGIN_VERIFY_SECRET` (obligatorio: mismo valor que Cloudflare inyecta en `X-Origin-Verify`)
 
 Opcional:
 - `FLASK_ENV` debe quedar vacio o `production` (no usar `development` en Railway)
@@ -63,7 +63,7 @@ Crear `.env.local` (y opcionalmente `.env.remote`) usando `.env.example` como ba
 MYSQL_HOST=127.0.0.1
 MYSQL_USER=<usuario>
 MYSQL_PASSWORD=<password>
-MYSQL_DB=<database>
+MYSQL_DATABASE=<database>
 ORIGIN_VERIFY_SECRET=<secreto_local>
 FLASK_ENV=development
 ```

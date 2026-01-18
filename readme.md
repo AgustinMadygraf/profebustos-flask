@@ -79,7 +79,7 @@ CORS restringido a orígenes permitidos (por ejemplo `https://profebustos.com.ar
 - WSGI entrypoint: `wsgi.py` (exporta `app`).
 - Variables de entorno DB (Railway MySQL plugin o externa):
   - `MYSQL_PRIVATE_URL` o `MYSQL_URL` (preferido), o bien:
-  - `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`
+  - `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE` / `MYSQL_DATABASE`
   - Alternativa legacy: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DB`
 - Seguridad:
   - `ORIGIN_VERIFY_SECRET` (header `X-Origin-Verify` inyectado por Cloudflare).
