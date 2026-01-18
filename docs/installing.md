@@ -22,7 +22,7 @@
    ```
 
 4. **Configura las variables de entorno:**
-   Crea un archivo `.env` en la raíz con el siguiente contenido (ajusta según tu configuración local):
+   Crea un archivo `.env.local` en la raíz (usa `.env.example` como base) con el siguiente contenido:
    ```
    MYSQL_HOST=localhost
    MYSQL_USER=tu_usuario
@@ -57,14 +57,14 @@
    ```
 
 3. **Configura las variables de entorno:**
-   - Desde la consola de PythonAnywhere, crea el archivo `.env` en la raíz del proyecto con tus credenciales de MySQL:
+   - Desde la consola de PythonAnywhere, crea el archivo `.env.remote` en la raíz del proyecto con tus credenciales de MySQL:
      ```sh
      cd ~/profebustos-flask
-     echo "MYSQL_HOST=tu_usuario.mysql.pythonanywhere-services.com" >> .env
-     echo "MYSQL_USER=tu_usuario" >> .env
-     echo "MYSQL_PASSWORD=tu_contraseña" >> .env
-     echo "MYSQL_DB=tu_base_de_datos" >> .env
-     echo "FLASK_ENV=production" >> .env
+     echo "MYSQL_HOST=tu_usuario.mysql.pythonanywhere-services.com" >> .env.remote
+     echo "MYSQL_USER=tu_usuario" >> .env.remote
+     echo "MYSQL_PASSWORD=tu_contraseña" >> .env.remote
+     echo "MYSQL_DB=tu_base_de_datos" >> .env.remote
+     echo "FLASK_ENV=production" >> .env.remote
      ```
 
 4. **Crea la base de datos en el panel web de PythonAnywhere:**

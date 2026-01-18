@@ -1,3 +1,5 @@
 venv/
 .env
+.env.local
+.env.remote
 __pycache__/

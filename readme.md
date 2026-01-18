@@ -5,6 +5,7 @@ Aplicación Flask para registrar conversiones de usuarios (por ejemplo, clics en
 ## Instalación
 
 Consulta la guía completa en [docs/installing.md](docs/installing.md).
+Guía de despliegue Railway y setup local en [docs/railway-setup.md](docs/railway-setup.md).
 
 ### Ejecución rápida local
 
@@ -24,7 +25,7 @@ Consulta la guía completa en [docs/installing.md](docs/installing.md).
    python.exe -m pip install -U pip setuptools wheel
    pip install -r requirements.txt
    ```
-4. Configura las variables de entorno en `.env` (ver ejemplo en `docs/installing.md`).
+4. Configura las variables de entorno en `.env.local` o `.env.remote` (ver `.env.example` y `docs/installing.md`).
 5. Inicializa la base de datos:
    ```sh
    python setup_db.py
