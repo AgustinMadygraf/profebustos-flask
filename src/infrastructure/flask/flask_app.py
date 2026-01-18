@@ -17,7 +17,37 @@ from src.use_cases.register_contact import RegisterContactUseCase
 logger = get_logger("flask_app")
 
 app = Flask(__name__)
-CORS(app, origins=["https://profebustos.com.ar", "http://localhost:5173"], supports_credentials=True)
+app.config["MAX_CONTENT_LENGTH"] = 20 * 1024
+# CORS explícito para la ruta crítica de contacto
+CORS(
+    app,
+    resources={
+        r"/v1/contact/*": {
+            "origins": [
+                "https://profebustos.com.ar",
+                "https://www.profebustos.com.ar",
+            ],
+            "methods": ["POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "X-Origin-Verify"],
+            "max_age": 600,
+        }
+    },
+)
+
+def require_cf_header():
+    secret = os.getenv("ORIGIN_VERIFY_SECRET", "")
+    header_value = request.headers.get("X-Origin-Verify", "")
+    if not secret or header_value != secret:
+        return jsonify({"success": False, "error": "Forbidden"}), 403
+    return None
+
+@app.before_request
+def enforce_origin_verify():
+    if request.method == "OPTIONS":
+        return None
+    if request.path.startswith("/v1/contact/"):
+        return require_cf_header()
+    return None
 
 @app.route('/')
 def hello_world():
@@ -37,6 +67,11 @@ mysql_client = MySQLClient()
 contact_repository = ContactRepositoryAdapter(mysql_client)
 register_contact_use_case = RegisterContactUseCase(contact_repository)
 contact_controller = ContactController(register_contact_use_case)
+
+# Preflight explícito para la ruta crítica de contacto
+@app.route('/v1/contact/email', methods=['OPTIONS'])
+def preflight_contact():
+    return '', 204
 
 # Nuevo endpoint para registrar datos de contacto
 @app.route('/v1/contact/email', methods=['POST'])
