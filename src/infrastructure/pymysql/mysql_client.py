@@ -1,7 +1,9 @@
-
-"""
+﻿"""
 Path: src/infrastructure/pymysql/mysql_client.py
 """
+
+import os
+from urllib.parse import urlparse
 
 import pymysql
 from src.shared.config import MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
@@ -9,19 +11,45 @@ from src.shared.logger_flask_v0 import get_logger
 
 logger = get_logger()
 
+
+def _load_db_config(host=None, user=None, password=None, db=None, port=None):
+    env_url = os.getenv("MYSQL_PRIVATE_URL") or os.getenv("MYSQL_URL")
+    if env_url:
+        parsed = urlparse(env_url)
+        return {
+            "host": parsed.hostname,
+            "user": parsed.username,
+            "password": parsed.password,
+            "db": parsed.path.lstrip("/"),
+            "port": parsed.port or 3306,
+        }
+
+    return {
+        "host": host or os.getenv("MYSQLHOST") or os.getenv("MYSQL_HOST") or MYSQL_HOST,
+        "user": user or os.getenv("MYSQLUSER") or os.getenv("MYSQL_USER") or MYSQL_USER,
+        "password": password or os.getenv("MYSQLPASSWORD") or os.getenv("MYSQL_PASSWORD") or MYSQL_PASSWORD,
+        "db": db or os.getenv("MYSQLDATABASE") or os.getenv("MYSQL_DB") or MYSQL_DB,
+        "port": int(port or os.getenv("MYSQLPORT") or os.getenv("MYSQL_PORT") or 3306),
+    }
+
+
 class MySQLClient:
     "Cliente MySQL para operaciones de base de datos."
-    def __init__(self, host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD, db=MYSQL_DB):
-        self.host = host
-        self.user = user
-        self.password = password
-        self.db = db
+    def __init__(self, host=None, user=None, password=None, db=None, port=None):
+        config = _load_db_config(host=host, user=user, password=password, db=db, port=port)
+        self.host = config["host"]
+        self.user = config["user"]
+        self.password = config["password"]
+        self.db = config["db"]
+        self.port = config["port"]
         self.connection = None
         # Lazy init: connect on first use to avoid boot failure when DB is down.
 
     def connect(self):
         "Establece una nueva conexión a MySQL."
         try:
+            if not self.host or not self.user or not self.db:
+                raise ConnectionError("Missing MySQL configuration")
             if self.connection:
                 self.connection.close()
             self.connection = pymysql.connect(
@@ -29,7 +57,9 @@ class MySQLClient:
                 user=self.user,
                 password=self.password,
                 database=self.db,
-                cursorclass=pymysql.cursors.DictCursor
+                port=self.port,
+                connect_timeout=5,
+                cursorclass=pymysql.cursors.DictCursor,
             )
             logger.info("Conexión a MySQL exitosa")
         except Exception as e:
@@ -51,11 +81,11 @@ class MySQLClient:
         self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:
-                sql = """
-                    INSERT INTO contactos (
-                        ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent, created_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                """
+                sql = (
+                    "INSERT INTO contactos ("
+                    "ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent, created_at"
+                    ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())"
+                )
                 cursor.execute(sql, (
                     ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent
                 ))
@@ -70,11 +100,11 @@ class MySQLClient:
         self.ensure_connection()
         try:
             with self.connection.cursor() as cursor:
-                sql = """
-                    SELECT ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent, created_at
-                    FROM contactos
-                    ORDER BY created_at DESC
-                """
+                sql = (
+                    "SELECT ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent, created_at "
+                    "FROM contactos "
+                    "ORDER BY created_at DESC"
+                )
                 cursor.execute(sql)
                 contactos = cursor.fetchall()
                 logger.info("%d contactos recuperados", len(contactos))

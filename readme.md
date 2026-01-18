@@ -69,4 +69,28 @@ Consulta la guía completa en [docs/installing.md](docs/installing.md).
 
 ## CORS
 
-Todas las respuestas incluyen encabezados CORS para permitir solicitudes desde cualquier origen.
+CORS restringido a orígenes permitidos (por ejemplo `https://profebustos.com.ar`).
+
+## Produccion en Railway
+
+- Start Command:
+  `gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 wsgi:app`
+- WSGI entrypoint: `wsgi.py` (exporta `app`).
+- Variables de entorno DB (Railway MySQL plugin o externa):
+  - `MYSQL_PRIVATE_URL` o `MYSQL_URL` (preferido), o bien:
+  - `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`
+  - Alternativa legacy: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DB`
+- Seguridad:
+  - `ORIGIN_VERIFY_SECRET` (header `X-Origin-Verify` inyectado por Cloudflare).
+  - `FLASK_ENV=development` solo en local.
+
+### Checks rapidos (curl)
+
+- Health:
+  `curl -i https://<app>.up.railway.app/health`
+- Health DB:
+  `curl -i https://<app>.up.railway.app/health/db`
+- Preflight:
+  `curl -i -X OPTIONS https://api.profebustos.com.ar/v1/contact/email -H "Origin: https://profebustos.com.ar" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type"`
+- POST:
+  `curl -i -X POST https://api.profebustos.com.ar/v1/contact/email -H "Origin: https://profebustos.com.ar" -H "Content-Type: application/json" -d "{\"name\":\"Test\",\"email\":\"test@test.com\"}"`

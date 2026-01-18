@@ -3,7 +3,9 @@ Path: src/infrastructure/flask/flask_app.py
 """
 
 import os
-from flask import Flask, request, jsonify, send_from_directory
+import time
+import uuid
+from flask import Flask, request, jsonify, send_from_directory, g
 from flask_cors import CORS
 
 from src.shared.logger_flask_v0 import get_logger
@@ -46,6 +48,12 @@ def require_cf_header():
 def enforce_origin_verify():
     if request.method == "OPTIONS":
         return None
+    g.request_id = (
+        request.headers.get("CF-RAY")
+        or request.headers.get("X-Request-Id")
+        or str(uuid.uuid4())
+    )
+    g.request_start = time.time()
     if (
         os.getenv("FLASK_ENV") == "development"
         and request.headers.get("Origin") == "http://localhost:5173"
@@ -66,6 +74,20 @@ def health_check():
     "Health check endpoint."
     logger.info("Health check solicitado")
     return jsonify({'success': True, 'ok': True}), 200
+
+@app.route('/health/db', methods=['GET'])
+def health_check_db():
+    "DB health check endpoint."
+    try:
+        mysql_client.ensure_connection()
+        return jsonify({'success': True, 'ok': True}), 200
+    except Exception as exc:
+        logger.warning("DB health check failed: %s", exc.__class__.__name__)
+        return jsonify({
+            'success': False,
+            'error': 'DB unavailable',
+            'error_code': 'DB_UNAVAILABLE'
+        }), 503
 
 # Instancia única de dependencias
 mysql_client = MySQLClient()
@@ -104,15 +126,23 @@ def registrar_contacto():
 @app.after_request
 def log_request(response):
     if request.path.startswith("/v1/contact/"):
+        request_id = getattr(g, "request_id", None)
+        elapsed_ms = None
+        if getattr(g, "request_start", None) is not None:
+            elapsed_ms = int((time.time() - g.request_start) * 1000)
         logger.info(
-            "Request log path=%s status=%s ip=%s ua=%s origin=%s referer=%s",
+            "Request log path=%s status=%s ip=%s ua=%s origin=%s referer=%s req_id=%s ms=%s",
             request.path,
             response.status_code,
             request.remote_addr,
             request.headers.get("User-Agent"),
             request.headers.get("Origin"),
             request.headers.get("Referer"),
+            request_id,
+            elapsed_ms,
         )
+    if getattr(g, "request_id", None):
+        response.headers["X-Request-Id"] = g.request_id
     return response
 
 # Nuevo endpoint para listar contactos registrados
