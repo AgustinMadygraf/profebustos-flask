@@ -24,6 +24,7 @@ CORS(
     resources={
         r"/v1/contact/*": {
             "origins": [
+                "http://localhost:5173",
                 "https://profebustos.com.ar",
                 "https://www.profebustos.com.ar",
             ],
@@ -45,6 +46,11 @@ def require_cf_header():
 def enforce_origin_verify():
     if request.method == "OPTIONS":
         return None
+    if (
+        os.getenv("FLASK_ENV") == "development"
+        and request.headers.get("Origin") == "http://localhost:5173"
+    ):
+        return None
     if request.path.startswith("/v1/contact/"):
         return require_cf_header()
     return None
@@ -59,7 +65,7 @@ def hello_world():
 def health_check():
     "Health check endpoint."
     logger.info("Health check solicitado")
-    return jsonify({'status': 'ok'}), 200
+    return jsonify({'success': True, 'ok': True}), 200
 
 # Instancia única de dependencias
 mysql_client = MySQLClient()
@@ -77,11 +83,37 @@ def preflight_contact():
 @app.route('/v1/contact/email', methods=['POST'])
 def registrar_contacto():
     logger.info("Solicitud a /v1/contact/email")
+    if request.content_type != "application/json":
+        return jsonify({
+            "success": False,
+            "error": "Unsupported Media Type",
+            "error_code": "UNSUPPORTED_MEDIA_TYPE"
+        }), 415
+    if request.content_length is not None and request.content_length > 20 * 1024:
+        return jsonify({
+            "success": False,
+            "error": "Payload Too Large",
+            "error_code": "PAYLOAD_TOO_LARGE"
+        }), 413
     response, status = contact_controller.registrar_contacto(request)
     if response.get('success') and 'contact' in response:
         contact = response.pop('contact')
         return jsonify(ContactPresenter.to_response(contact)), status
     return jsonify(response), status
+
+@app.after_request
+def log_request(response):
+    if request.path.startswith("/v1/contact/"):
+        logger.info(
+            "Request log path=%s status=%s ip=%s ua=%s origin=%s referer=%s",
+            request.path,
+            response.status_code,
+            request.remote_addr,
+            request.headers.get("User-Agent"),
+            request.headers.get("Origin"),
+            request.headers.get("Referer"),
+        )
+    return response
 
 # Nuevo endpoint para listar contactos registrados
 @app.route('/v1/contact/list', methods=['GET'])
@@ -108,16 +140,24 @@ def not_found_error(e):
     logger.warning("Recurso no encontrado: %s", str(e))
     return jsonify({
         'success': False,
-        'error': 'Recurso no encontrado (404)'
+        'error': 'Recurso no encontrado (404)',
+        'error_code': 'NOT_FOUND'
     }), 404
 
 @app.errorhandler(Exception)
 def handle_exception(e):
     "Manejo global de excepciones no capturadas."
     logger.exception("Error inesperado: %s", str(e))
+    is_dev = os.getenv("FLASK_ENV") == "development"
+    error_message = (
+        f'Ocurrió un error técnico. Detalle: {str(e)}'
+        if is_dev
+        else 'Ocurrió un error técnico.'
+    )
     response = jsonify({
         'success': False,
-        'error': f'Ocurrió un error técnico. Detalle: {str(e)}'
+        'error': error_message,
+        'error_code': 'INTERNAL_ERROR'
     })
     response.status_code = 500
     return response

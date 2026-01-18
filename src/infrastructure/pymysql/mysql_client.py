@@ -17,7 +17,7 @@ class MySQLClient:
         self.password = password
         self.db = db
         self.connection = None
-        self.connect()
+        # Lazy init: connect on first use to avoid boot failure when DB is down.
 
     def connect(self):
         "Establece una nueva conexión a MySQL."
@@ -39,6 +39,9 @@ class MySQLClient:
     def ensure_connection(self):
         "Verifica si la conexión está abierta y la restablece si es necesario."
         try:
+            if not self.connection:
+                self.connect()
+                return
             self.connection.ping(reconnect=True)
         except (pymysql.Error, AttributeError):
             self.connect()
