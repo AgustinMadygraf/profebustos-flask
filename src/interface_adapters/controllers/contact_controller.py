@@ -79,7 +79,10 @@ class ContactController:
             }, 500
         except Exception as exc:
             exc_module = exc.__class__.__module__
-            if exc_module.startswith("pymysql"):
+            if exc_module.startswith("pymysql") or (
+                isinstance(exc, RuntimeError)
+                and "cryptography" in str(exc).lower()
+            ):
                 logger.warning(
                     "DB no disponible al registrar contacto origin=%s path=%s ip=%s ua=%s err=%s",
                     request.headers.get("Origin"),
