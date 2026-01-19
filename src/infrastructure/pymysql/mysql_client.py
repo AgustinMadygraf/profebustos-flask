@@ -3,54 +3,19 @@ Path: src/infrastructure/pymysql/mysql_client.py
 """
 
 import os
-from urllib.parse import urlparse
-
 import pymysql
-from src.shared.config import MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 from src.shared.logger_flask_v0 import get_logger
 from src.infrastructure.pymysql.create_table_if_not_exists import TableCreator
 from src.infrastructure.pymysql.setup import MySQLSetupChecker
+from src.infrastructure.pymysql.db_config import load_db_config
 
 logger = get_logger()
-
-
-def _load_db_config(host=None, user=None, password=None, db=None, port=None):
-    env_url = os.getenv("MYSQL_PRIVATE_URL") or os.getenv("MYSQL_URL")
-    if env_url:
-        parsed = urlparse(env_url)
-        return {
-            "host": parsed.hostname,
-            "user": parsed.username,
-            "password": parsed.password,
-            "db": parsed.path.lstrip("/"),
-            "port": parsed.port or 3306,
-        }
-
-    return {
-        "host": host or os.getenv("MYSQLHOST") or os.getenv("MYSQL_HOST") or MYSQL_HOST,
-        "user": user or os.getenv("MYSQLUSER") or os.getenv("MYSQL_USER") or MYSQL_USER,
-        "password": (
-            password
-            or os.getenv("MYSQLPASSWORD")
-            or os.getenv("MYSQL_PASSWORD")
-            or os.getenv("MYSQL_ROOT_PASSWORD")
-            or MYSQL_PASSWORD
-        ),
-        "db": (
-            db
-            or os.getenv("MYSQLDATABASE")
-            or os.getenv("MYSQL_DATABASE")
-            or os.getenv("MYSQL_DB")
-            or MYSQL_DB
-        ),
-        "port": int(port or os.getenv("MYSQLPORT") or os.getenv("MYSQL_PORT") or 3306),
-    }
 
 
 class MySQLClient:
     "Cliente MySQL para operaciones de base de datos."
     def __init__(self, host=None, user=None, password=None, db=None, port=None):
-        config = _load_db_config(host=host, user=user, password=password, db=db, port=port)
+        config = load_db_config(host=host, user=user, password=password, db=db, port=port)
         self.host = config["host"]
         self.user = config["user"]
         self.password = config["password"]
@@ -92,7 +57,7 @@ class MySQLClient:
 
     def _ensure_contactos_table(self):
         if os.getenv("AUTO_CREATE_DB") != "true":
-            raise
+            raise RuntimeError("AUTO_CREATE_DB is not enabled")
         table_creator = TableCreator()
         table_creator.create_contactos_table()
         checker = MySQLSetupChecker()

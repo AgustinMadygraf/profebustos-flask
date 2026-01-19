@@ -38,6 +38,7 @@ CORS(
 )
 
 def require_cf_header():
+    "Middleware para verificar el header X-Origin-Verify en rutas críticas."
     secret = os.getenv("ORIGIN_VERIFY_SECRET", "")
     header_value = request.headers.get("X-Origin-Verify", "")
     if not secret or header_value != secret:
@@ -46,6 +47,7 @@ def require_cf_header():
 
 @app.before_request
 def enforce_origin_verify():
+    "Middleware para verificar el header X-Origin-Verify en rutas críticas."
     if request.method == "OPTIONS":
         return None
     g.request_id = (
@@ -81,7 +83,7 @@ def health_check_db():
     try:
         mysql_client.ensure_connection()
         return jsonify({'success': True, 'ok': True}), 200
-    except Exception as exc:
+    except (ConnectionError, TimeoutError, ValueError) as exc:
         logger.warning("DB health check failed: %s", exc.__class__.__name__)
         return jsonify({
             'success': False,
@@ -99,11 +101,13 @@ contact_controller = ContactController(register_contact_use_case)
 # Preflight explícito para la ruta crítica de contacto
 @app.route('/v1/contact/email', methods=['OPTIONS'])
 def preflight_contact():
+    "Manejo de preflight CORS para /v1/contact/email."
     return '', 204
 
 # Nuevo endpoint para registrar datos de contacto
 @app.route('/v1/contact/email', methods=['POST'])
 def registrar_contacto():
+    "Endpoint para registrar datos de contacto."
     logger.info("Solicitud a /v1/contact/email")
     if request.content_type != "application/json":
         return jsonify({
@@ -125,6 +129,7 @@ def registrar_contacto():
 
 @app.after_request
 def log_request(response):
+    "Middleware para loguear detalles de la solicitud."
     if request.path.startswith("/v1/contact/"):
         request_id = getattr(g, "request_id", None)
         elapsed_ms = None

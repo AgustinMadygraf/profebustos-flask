@@ -3,7 +3,7 @@ Path: src/infrastructure/pymysql/setup.py
 """
 
 import pymysql
-from src.infrastructure.pymysql.mysql_client import _load_db_config
+from src.infrastructure.pymysql.db_config import load_db_config
 from src.shared.logger_flask_v0 import get_logger
 
 class MySQLSetupChecker:
@@ -16,7 +16,7 @@ class MySQLSetupChecker:
         "Establece la conexión persistente si no existe."
         if self.conn is None:
             try:
-                db_config = _load_db_config()
+                db_config = load_db_config()
                 self.conn = pymysql.connect(
                     host=db_config["host"],
                     user=db_config["user"],
@@ -41,7 +41,7 @@ class MySQLSetupChecker:
 
     def check_database_exists(self):
         "Verifica la existencia de la base de datos MySQL."
-        db_config = _load_db_config()
+        db_config = load_db_config()
         self.logger.info("Verificando existencia de base de datos '%s'...", db_config["db"])
         if not self.connect():
             return False
@@ -61,7 +61,7 @@ class MySQLSetupChecker:
 
     def check_table_exists(self, table_name):
         "Verifica la existencia de una tabla específica en la base de datos MySQL."
-        db_config = _load_db_config()
+        db_config = load_db_config()
         self.logger.info("Verificando existencia de tabla '%s' en '%s'...", table_name, db_config["db"])
         if not self.connect():
             return False

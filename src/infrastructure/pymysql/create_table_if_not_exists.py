@@ -3,7 +3,7 @@ Path: src/infrastructure/pymysql/create_table_if_not_exists.py
 """
 
 import pymysql
-from src.infrastructure.pymysql.mysql_client import _load_db_config
+from src.infrastructure.pymysql.db_config import load_db_config
 from src.shared.logger_flask_v0 import get_logger
 
 class TableCreator:
@@ -14,7 +14,7 @@ class TableCreator:
     def create_contactos_table(self):
         "Crea la tabla 'contactos' si no existe, según el modelo de contacto actual."
         try:
-            config = _load_db_config()
+            config = load_db_config()
             connection = pymysql.connect(
                 host=config["host"],
                 user=config["user"],
