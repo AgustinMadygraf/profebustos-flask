@@ -3,7 +3,7 @@ Path: src/infrastructure/pymysql/setup.py
 """
 
 import pymysql
-from src.shared import config
+from src.infrastructure.pymysql.mysql_client import _load_db_config
 from src.shared.logger_flask_v0 import get_logger
 
 class MySQLSetupChecker:
@@ -16,10 +16,12 @@ class MySQLSetupChecker:
         "Establece la conexión persistente si no existe."
         if self.conn is None:
             try:
+                db_config = _load_db_config()
                 self.conn = pymysql.connect(
-                    host=config.MYSQL_HOST,
-                    user=config.MYSQL_USER,
-                    password=config.MYSQL_PASSWORD,
+                    host=db_config["host"],
+                    user=db_config["user"],
+                    password=db_config["password"],
+                    port=db_config["port"],
                     connect_timeout=5
                 )
                 self.logger.info("✅ Conexión a MySQL exitosa.")
@@ -39,12 +41,13 @@ class MySQLSetupChecker:
 
     def check_database_exists(self):
         "Verifica la existencia de la base de datos MySQL."
-        self.logger.info("Verificando existencia de base de datos '%s'...", config.MYSQL_DB)
+        db_config = _load_db_config()
+        self.logger.info("Verificando existencia de base de datos '%s'...", db_config["db"])
         if not self.connect():
             return False
         try:
             with self.conn.cursor() as cursor:
-                cursor.execute("SHOW DATABASES LIKE %s", (config.MYSQL_DB,))
+                cursor.execute("SHOW DATABASES LIKE %s", (db_config["db"],))
                 result = cursor.fetchone()
                 if result:
                     self.logger.info("✅ La base de datos existe.")
@@ -58,12 +61,13 @@ class MySQLSetupChecker:
 
     def check_table_exists(self, table_name):
         "Verifica la existencia de una tabla específica en la base de datos MySQL."
-        self.logger.info("Verificando existencia de tabla '%s' en '%s'...", table_name, config.MYSQL_DB)
+        db_config = _load_db_config()
+        self.logger.info("Verificando existencia de tabla '%s' en '%s'...", table_name, db_config["db"])
         if not self.connect():
             return False
         try:
             # Selecciona la base de datos
-            self.conn.select_db(config.MYSQL_DB)
+            self.conn.select_db(db_config["db"])
             with self.conn.cursor() as cursor:
                 cursor.execute("SHOW TABLES LIKE %s", (table_name,))
                 result = cursor.fetchone()
