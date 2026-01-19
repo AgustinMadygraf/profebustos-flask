@@ -34,6 +34,7 @@ Alternativa por variables separadas:
 
 Seguridad:
 - `ORIGIN_VERIFY_SECRET` (obligatorio: mismo valor que Cloudflare inyecta en `X-Origin-Verify`)
+- `AUTO_CREATE_DB` (opcional, usar solo para bootstrap: crea la tabla si falta)
 
 Opcional:
 - `FLASK_ENV` debe quedar vacio o `production` (no usar `development` en Railway)

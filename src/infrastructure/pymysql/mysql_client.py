@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 import pymysql
 from src.shared.config import MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
 from src.shared.logger_flask_v0 import get_logger
+from src.infrastructure.pymysql.create_table_if_not_exists import TableCreator
+from src.infrastructure.pymysql.setup import MySQLSetupChecker
 
 logger = get_logger()
 
@@ -88,6 +90,19 @@ class MySQLClient:
         except (pymysql.Error, AttributeError):
             self.connect()
 
+    def _ensure_contactos_table(self):
+        if os.getenv("AUTO_CREATE_DB") != "true":
+            raise
+        table_creator = TableCreator()
+        table_creator.create_contactos_table()
+        checker = MySQLSetupChecker()
+        checker.logger.info("=== Verificación de entorno MySQL ===")
+        if checker.connect():
+            if checker.check_database_exists():
+                checker.check_table_exists("contactos")
+        checker.close()
+        checker.logger.info("=== Fin de la verificación ===")
+
     def insert_contacto(self, ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent):
         "Inserta un registro de contacto en la base de datos."
         self.ensure_connection()
@@ -103,6 +118,16 @@ class MySQLClient:
                 ))
                 self.connection.commit()
                 logger.info("Contacto insertado correctamente")
+        except pymysql.err.ProgrammingError as e:
+            if e.args and e.args[0] == 1146:
+                logger.warning("Tabla 'contactos' inexistente, intentando crearla")
+                self._ensure_contactos_table()
+                return self.insert_contacto(
+                    ticket_id, name, email, company, message,
+                    page_location, traffic_source, ip, user_agent
+                )
+            logger.error("Error al insertar contacto: %s", e)
+            raise
         except Exception as e:
             logger.error("Error al insertar contacto: %s", e)
             raise
