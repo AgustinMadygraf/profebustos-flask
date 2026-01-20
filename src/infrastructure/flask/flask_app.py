@@ -16,6 +16,7 @@ from src.interface_adapters.controllers.contact_controller import ContactControl
 from src.interface_adapters.presenters.contact_presenter import ContactPresenter
 from src.use_cases.register_contact import RegisterContactUseCase
 from src.use_cases.list_contacts import ListContactsUseCase
+from src.application.errors import ContactListFailed
 from src.infrastructure.common.uuid_generator import UUIDGenerator
 
 logger = get_logger("flask_app")
@@ -170,7 +171,7 @@ def listar_contactos():
         contactos = list_contacts_use_case.execute()
         response_items = [ContactPresenter.to_response_with_created_at(c) for c in contactos]
         return jsonify({'success': True, 'contactos': response_items}), 200
-    except (ConnectionError, TimeoutError, ValueError) as e:
+    except ContactListFailed as e:
         logger.exception("Error al obtener contactos: %s", str(e))
         return jsonify({'success': False, 'error': 'Error al obtener los contactos'}), 500
 

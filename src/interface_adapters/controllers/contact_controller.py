@@ -6,6 +6,7 @@ import os
 import re
 
 from src.shared.logger_flask_v0 import get_logger
+from src.application.errors import ContactCreateFailed, DatabaseUnavailable
 
 logger = get_logger("contact_controller")
 
@@ -48,35 +49,29 @@ class ContactController:
                 user_agent=request.headers.get('User-Agent', '')
             )
             return {'success': True, 'ticket_id': contact.ticket_id, 'contact': contact}, 201
-        except (ConnectionError, TimeoutError, ValueError):
+        except ContactCreateFailed:
             return {
                 'success': False,
                 'error': 'Error al registrar el contacto',
                 'error_code': 'CONTACT_CREATE_FAILED'
             }, 500
-        except Exception as exc:
-            exc_module = exc.__class__.__module__
-            if exc_module.startswith("pymysql") or (
-                isinstance(exc, RuntimeError)
-                and "cryptography" in str(exc).lower()
-            ):
-                logger.warning(
-                    "DB no disponible al registrar contacto origin=%s path=%s ip=%s ua=%s err=%s",
-                    request.headers.get("Origin"),
-                    request.path,
-                    request.remote_addr,
-                    request.headers.get("User-Agent"),
-                    exc.__class__.__name__,
-                )
-                response = {
-                    'success': False,
-                    'error': 'Servicio temporalmente no disponible',
-                    'error_code': 'DB_UNAVAILABLE'
-                }
-                if os.getenv("FLASK_ENV") == "development":
-                    response["error_detail"] = exc.__class__.__name__
-                return response, 503
-            raise
+        except DatabaseUnavailable as exc:
+            logger.warning(
+                "DB no disponible al registrar contacto origin=%s path=%s ip=%s ua=%s err=%s",
+                request.headers.get("Origin"),
+                request.path,
+                request.remote_addr,
+                request.headers.get("User-Agent"),
+                exc.__class__.__name__,
+            )
+            response = {
+                'success': False,
+                'error': 'Servicio temporalmente no disponible',
+                'error_code': 'DB_UNAVAILABLE'
+            }
+            if os.getenv("FLASK_ENV") == "development":
+                response["error_detail"] = exc.__class__.__name__
+            return response, 503
 
 
 def sanitize_and_validate_contact_payload(data):

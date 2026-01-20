@@ -2,19 +2,17 @@
 Path: src/infrastructure/pymysql/mysql_client.py
 """
 
-import os
 import pymysql
 from src.shared.logger_flask_v0 import get_logger
-from src.infrastructure.pymysql.create_table_if_not_exists import TableCreator
-from src.infrastructure.pymysql.setup import MySQLSetupChecker
 from src.infrastructure.pymysql.db_config import load_db_config
+from src.infrastructure.pymysql.contact_table_provisioner import ContactTableProvisioner
 
 logger = get_logger()
 
 
 class MySQLClient:
     "Cliente MySQL para operaciones de base de datos."
-    def __init__(self, host=None, user=None, password=None, db=None, port=None):
+    def __init__(self, host=None, user=None, password=None, db=None, port=None, provisioner=None):
         config = load_db_config(host=host, user=user, password=password, db=db, port=port)
         self.host = config["host"]
         self.user = config["user"]
@@ -22,6 +20,7 @@ class MySQLClient:
         self.db = config["db"]
         self.port = config["port"]
         self.connection = None
+        self.provisioner = provisioner or ContactTableProvisioner()
         # Lazy init: connect on first use to avoid boot failure when DB is down.
 
     def connect(self):
@@ -55,19 +54,6 @@ class MySQLClient:
         except (pymysql.Error, AttributeError):
             self.connect()
 
-    def _ensure_contactos_table(self):
-        if os.getenv("AUTO_CREATE_DB") != "true":
-            raise RuntimeError("AUTO_CREATE_DB is not enabled")
-        table_creator = TableCreator()
-        table_creator.create_contactos_table()
-        checker = MySQLSetupChecker()
-        checker.logger.info("=== Verificación de entorno MySQL ===")
-        if checker.connect():
-            if checker.check_database_exists():
-                checker.check_table_exists("contactos")
-        checker.close()
-        checker.logger.info("=== Fin de la verificación ===")
-
     def insert_contacto(self, ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent):
         "Inserta un registro de contacto en la base de datos."
         self.ensure_connection()
@@ -86,7 +72,7 @@ class MySQLClient:
         except pymysql.err.ProgrammingError as e:
             if e.args and e.args[0] == 1146:
                 logger.warning("Tabla 'contactos' inexistente, intentando crearla")
-                self._ensure_contactos_table()
+                self.provisioner.ensure_contactos_table()
                 return self.insert_contacto(
                     ticket_id, name, email, company, message,
                     page_location, traffic_source, ip, user_agent
