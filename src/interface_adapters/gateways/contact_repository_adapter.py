@@ -2,6 +2,7 @@
 Path: src/interface_adapters/gateways/contact_repository_adapter.py
 """
 
+from src.entities.contact import Contact
 from src.interface_adapters.gateways.contact_repository import ContactRepository
 
 class ContactRepositoryAdapter(ContactRepository):
@@ -26,4 +27,19 @@ class ContactRepositoryAdapter(ContactRepository):
 
     def get_all(self):
         "Devuelve una lista de todos los contactos usando mysql_client."
-        return self.mysql_client.get_all_contactos()
+        rows = self.mysql_client.get_all_contactos()
+        contactos = []
+        for row in rows:
+            contactos.append(Contact(
+                ticket_id=row.get("ticket_id"),
+                name=row.get("name"),
+                email=row.get("email"),
+                company=row.get("company"),
+                message=row.get("message"),
+                page_location=row.get("page_location"),
+                traffic_source=row.get("traffic_source"),
+                ip=row.get("ip"),
+                user_agent=row.get("user_agent"),
+                created_at=row.get("created_at"),
+            ))
+        return contactos

@@ -1,5 +1,3 @@
-import re
-
 from use_cases.register_contact import RegisterContactUseCase
 
 
@@ -12,9 +10,20 @@ class FakeContactRepository:
         return contact
 
 
+class FakeIdGenerator:
+    def __init__(self, value):
+        self.value = value
+        self.calls = 0
+
+    def new_id(self):
+        self.calls += 1
+        return self.value
+
+
 def test_register_contact_creates_ticket_and_saves_once():
     repo = FakeContactRepository()
-    use_case = RegisterContactUseCase(repo)
+    id_generator = FakeIdGenerator("fixed-id-123")
+    use_case = RegisterContactUseCase(repo, id_generator)
 
     result = use_case.execute(
         name="Ada Lovelace",
@@ -29,4 +38,5 @@ def test_register_contact_creates_ticket_and_saves_once():
 
     assert len(repo.saved) == 1
     assert repo.saved[0] is result
-    assert re.match(r"^[0-9a-f-]{36}$", result.ticket_id)
+    assert result.ticket_id == "fixed-id-123"
+    assert id_generator.calls == 1

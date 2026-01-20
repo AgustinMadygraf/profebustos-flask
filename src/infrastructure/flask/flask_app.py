@@ -15,6 +15,8 @@ from src.interface_adapters.gateways.contact_repository_adapter import ContactRe
 from src.interface_adapters.controllers.contact_controller import ContactController
 from src.interface_adapters.presenters.contact_presenter import ContactPresenter
 from src.use_cases.register_contact import RegisterContactUseCase
+from src.use_cases.list_contacts import ListContactsUseCase
+from src.infrastructure.common.uuid_generator import UUIDGenerator
 
 logger = get_logger("flask_app")
 
@@ -97,8 +99,10 @@ def health_check_db():
 mysql_client = MySQLClient()
 
 contact_repository = ContactRepositoryAdapter(mysql_client)
-register_contact_use_case = RegisterContactUseCase(contact_repository)
+id_generator = UUIDGenerator()
+register_contact_use_case = RegisterContactUseCase(contact_repository, id_generator)
 contact_controller = ContactController(register_contact_use_case)
+list_contacts_use_case = ListContactsUseCase(contact_repository)
 
 # Preflight explícito para la ruta crítica de contacto
 @app.route('/v1/contact/email', methods=['OPTIONS'])
@@ -163,8 +167,9 @@ def listar_contactos():
     "Devuelve la lista de todos los contactos registrados."
     logger.info("Solicitud a /v1/contact/list")
     try:
-        contactos = contact_repository.get_all()
-        return jsonify({'success': True, 'contactos': contactos}), 200
+        contactos = list_contacts_use_case.execute()
+        response_items = [ContactPresenter.to_response_with_created_at(c) for c in contactos]
+        return jsonify({'success': True, 'contactos': response_items}), 200
     except (ConnectionError, TimeoutError, ValueError) as e:
         logger.exception("Error al obtener contactos: %s", str(e))
         return jsonify({'success': False, 'error': 'Error al obtener los contactos'}), 500

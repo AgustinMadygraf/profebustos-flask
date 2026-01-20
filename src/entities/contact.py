@@ -3,8 +3,8 @@ Path: src/entities/contact.py
 """
 
 class Contact:
-    "Representa un contacto registrado a través del formulario."
-    def __init__(self, ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent):
+    "Representa un contacto registrado a traves del formulario."
+    def __init__(self, ticket_id, name, email, company, message, page_location, traffic_source, ip, user_agent, created_at=None):
         self.ticket_id = ticket_id
         self.name = name
         self.email = email
@@ -14,6 +14,7 @@ class Contact:
         self.traffic_source = traffic_source
         self.ip = ip
         self.user_agent = user_agent
+        self.created_at = created_at
 
     def to_dict(self):
         "Convierte la instancia de Contact a un diccionario."
@@ -27,4 +28,5 @@ class Contact:
             "traffic_source": self.traffic_source,
             "ip": self.ip,
             "user_agent": self.user_agent,
+            "created_at": self.created_at,
         }

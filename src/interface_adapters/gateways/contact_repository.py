@@ -13,6 +13,6 @@ class ContactRepository(ABC):
         pass # pylint: disable=unnecessary-pass
 
     @abstractmethod
-    def get_all(self) -> list:
+    def get_all(self) -> list[Contact]:
         "Devuelve una lista de todos los contactos."
         pass # pylint: disable=unnecessary-pass
