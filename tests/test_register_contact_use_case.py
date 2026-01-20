@@ -37,6 +37,6 @@ def test_register_contact_creates_ticket_and_saves_once():
     )
 
     assert len(repo.saved) == 1
-    assert repo.saved[0] is result
+    assert repo.saved[0] is not result
     assert result.ticket_id == "fixed-id-123"
     assert id_generator.calls == 1

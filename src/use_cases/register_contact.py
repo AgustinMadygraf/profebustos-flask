@@ -2,6 +2,7 @@
 Path: src/use_cases/register_contact.py
 """
 
+from src.application.dtos.contact_dto import ContactDTO
 from src.entities.contact import Contact
 from src.application.ports.id_generator import IdGenerator
 
@@ -26,4 +27,15 @@ class RegisterContactUseCase:
             user_agent=user_agent
         )
         saved_contact = self.contact_repository.save(contact)
-        return saved_contact
+        return ContactDTO(
+            ticket_id=saved_contact.ticket_id,
+            name=saved_contact.name,
+            email=saved_contact.email,
+            company=saved_contact.company,
+            message=saved_contact.message,
+            page_location=saved_contact.page_location,
+            traffic_source=saved_contact.traffic_source,
+            ip=saved_contact.ip,
+            user_agent=saved_contact.user_agent,
+            created_at=getattr(saved_contact, "created_at", None),
+        )
