@@ -27,6 +27,8 @@ CORS(
         r"/v1/contact/*": {
             "origins": [
                 "http://localhost:5173",
+                "https://datamaq.com.ar",
+                "https://www.datamaq.com.ar",
                 "https://profebustos.com.ar",
                 "https://www.profebustos.com.ar",
             ],
@@ -131,17 +133,22 @@ def registrar_contacto():
 def log_request(response):
     "Middleware para loguear detalles de la solicitud."
     if request.path.startswith("/v1/contact/"):
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         request_id = getattr(g, "request_id", None)
         elapsed_ms = None
         if getattr(g, "request_start", None) is not None:
             elapsed_ms = int((time.time() - g.request_start) * 1000)
+        ip = request.headers.get("CF-Connecting-IP", request.remote_addr)
+        ua = request.headers.get("User-Agent", "")
+        origin = request.headers.get("Origin", "")
         logger.info(
-            "Request log path=%s status=%s ip=%s ua=%s origin=%s referer=%s req_id=%s ms=%s",
+            "Request log ts=%s path=%s status=%s ip=%s origin=%s ua=%s referer=%s req_id=%s ms=%s",
+            timestamp,
             request.path,
             response.status_code,
-            request.remote_addr,
-            request.headers.get("User-Agent"),
-            request.headers.get("Origin"),
+            ip,
+            origin,
+            ua,
             request.headers.get("Referer"),
             request_id,
             elapsed_ms,
