@@ -19,3 +19,6 @@ Conventions
 - Ports live in src/application/ports.
 - Adapters implement ports under src/infrastructure.
 - Web-specific models or serializers live under src/interface_adapters.
+
+Lightweight Guardrail
+- Run `python scripts/check_imports.py` to verify application/domain do not import Flask, PyMySQL, or dotenv.
